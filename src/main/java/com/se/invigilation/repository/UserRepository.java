@@ -1,10 +1,8 @@
 package com.se.invigilation.repository;
 
 import com.se.invigilation.dox.User;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -25,12 +23,6 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             where u.name=:name
             """)
     Mono<Integer> updateByName(String name, String unionid, String userid, String mobile);
-
-    @Query("""
-            select * from user u where u.department ->> '$.collId'=:collid
-            limit :#{#pageable.offset}, :#{#pageable.pageSize}
-            """)
-    Flux<User> findByCollId(String collid, Pageable pageable);
 
     @Query("""
             select * from user u where u.department ->> '$.depId'=:depid

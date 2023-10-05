@@ -18,6 +18,7 @@ public class Setting {
     @Id
     @CreatedBy
     private String id;
+    private String name;
     private String key;
     private String value;
 

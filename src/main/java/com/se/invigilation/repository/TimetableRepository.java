@@ -5,6 +5,7 @@ import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Repository
 public interface TimetableRepository extends ReactiveCrudRepository<Timetable, String> {
@@ -16,4 +17,6 @@ public interface TimetableRepository extends ReactiveCrudRepository<Timetable, S
             and t.startweek<=:week and t.endweek>=:week
             """)
     Flux<Timetable> findByDepIdAndDate(String depid, int week, int dayweek);
+
+    Mono<Integer> deleteByUserId(String userid);
 }

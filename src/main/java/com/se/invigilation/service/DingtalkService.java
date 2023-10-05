@@ -6,19 +6,28 @@ import com.aliyun.dingtalkcalendar_1_0.models.CreateEventRequest;
 import com.aliyun.dingtalkcalendar_1_0.models.CreateEventResponse;
 import com.aliyun.dingtalkcalendar_1_0.models.DeleteEventResponse;
 import com.aliyun.tea.TeaException;
+import com.aliyun.teaopenapi.models.Config;
 import com.aliyun.teautil.models.RuntimeOptions;
 import com.dingtalk.api.DefaultDingTalkClient;
 import com.dingtalk.api.DingTalkClient;
 import com.dingtalk.api.request.OapiMessageCorpconversationAsyncsendV2Request;
 import com.dingtalk.api.response.OapiMessageCorpconversationAsyncsendV2Response;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.se.invigilation.component.DingtalkComponent;
+import com.se.invigilation.dox.User;
 import com.se.invigilation.exception.XException;
+import com.se.invigilation.repository.InvigilationRepository;
+import com.se.invigilation.repository.UserRepository;
 import com.taobao.api.ApiException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -31,19 +40,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DingtalkService {
     private final DingtalkComponent dingtalkComponent;
+    private final ObjectMapper objectMapper;
+    private final InvigilationRepository invigilationRepository;
+    private final UserRepository userRepository;
     @Value("${dingtalk.agentid}")
     private String agentId;
-
     private Client eventClient;
     private DingTalkClient noticeClient;
+    String timeFormat = "%sT%s:00+08:00";
 
     @PostConstruct
     public void createClient() throws Exception {
-        com.aliyun.teaopenapi.models.Config config = new com.aliyun.teaopenapi.models.Config();
+        Config config = new Config();
         config.protocol = "https";
         config.regionId = "central";
         eventClient = new Client(config);
-
         noticeClient = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2");
     }
 
@@ -95,8 +106,6 @@ public class DingtalkService {
         }
     }
 
-
-    String timeFormat = "%sT%s:00+08:00";
     public Mono<String> addCalander(String createUnionId,
                                     String date,
                                     String stime,
@@ -182,6 +191,35 @@ public class DingtalkService {
         } catch (ApiException e) {
             return Mono.error(XException.builder().codeN(200).message(e.getMessage()).build());
         }
+    }
+
+    public Mono<Integer> cancel(String inviid) {
+        return this.invigilationRepository.findById(inviid).flatMap((invi) -> {
+            if (!StringUtils.hasLength(invi.getCalendarId())) {
+                return Mono.just(0);
+            } else {
+                List<Mono<String>> dingUserIds = new ArrayList<>();
+                try {
+                    String message = "监考取消：%s; %s";
+                    List<Map<String, String>> users = objectMapper.readValue(invi.getExecutor(), new TypeReference<>() {});
+                    Map<String, String> time = objectMapper.readValue(invi.getTime(), new TypeReference<>() {});
+                    Map < String, String > course = objectMapper.readValue(invi.getCourse(), new TypeReference<>() {});
+                    String cancelMessage = message.formatted(invi.getDate() + " " + time.get("starttime"), course.get("courseName"));
+                    for (Map<String, String> user : users) {
+                        Mono<String> byId = this.userRepository.findById(user.get("userId")).map(User::getDingUserId);
+                        dingUserIds.add(byId);
+                    }
+
+                    return Flux.merge(dingUserIds).collectList().
+                            map((userIds) -> String.join(",", userIds))
+                            .flatMap((ids) -> noticeCancel(ids, cancelMessage))
+                            .flatMap((r) -> deleteCalender(invi.getCreateUnionId(), invi.getCalendarId())).
+                            thenReturn(1);
+                } catch (JsonProcessingException var12) {
+                    return Mono.error(XException.builder().codeN(200).message(var12.getMessage()).build());
+                }
+            }
+        });
     }
 
     private String timeStamp(String text) {

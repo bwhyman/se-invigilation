@@ -10,7 +10,6 @@ import org.springframework.data.annotation.ReadOnlyProperty;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @NoArgsConstructor
 @AllArgsConstructor

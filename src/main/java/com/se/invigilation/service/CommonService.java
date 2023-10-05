@@ -1,11 +1,13 @@
 package com.se.invigilation.service;
 
+import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Setting;
+import com.se.invigilation.dox.User;
+import com.se.invigilation.repository.InvigilationRepository;
 import com.se.invigilation.repository.SettingRepository;
 import com.se.invigilation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,11 @@ public class CommonService {
     private final SettingRepository settingRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final InvigilationRepository invigilationRepository;
+
+    public Mono<User> getUser(String account) {
+        return userRepository.findByAccount(account);
+    }
 
     public Mono<List<Setting>> getSettings() {
         return settingRepository.findAll().collectList();
@@ -27,6 +34,10 @@ public class CommonService {
 
     @Transactional
     public Mono<Integer> updatePassword(String uid, String password) {
-        return userRepository.updatePasswordById(uid, passwordEncoder.encode(password));
+        return userRepository.updatePasswordById(uid, this.passwordEncoder.encode(password));
+    }
+
+    public Mono<Invigilation> getInvigilation(String id) {
+        return invigilationRepository.findById(id);
     }
 }

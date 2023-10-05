@@ -24,7 +24,8 @@ public class AdminController {
     //
     @PostMapping("colleges")
     public Mono<ResultVO> postColleges(@RequestBody Department department) {
-        return adminService.addCollege(department).map(dep -> ResultVO.success(Map.of("department", dep)));
+        return adminService.addCollege(department)
+                .map(dep -> ResultVO.success(Map.of("department", dep)));
     }
 
     //
@@ -43,9 +44,8 @@ public class AdminController {
     //
     @PostMapping("settings")
     public Mono<ResultVO> posSettings(@RequestBody Setting setting) {
-        return adminService.addSetting(setting).map(s -> {
-            return ResultVO.success(Map.of("setting", s));
-        });
+        return adminService.addSetting(setting).map(s ->
+            ResultVO.success(Map.of("setting", s)));
     }
 
     @PostMapping("dingusers")

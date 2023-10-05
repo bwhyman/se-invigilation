@@ -1,25 +1,20 @@
 package com.se.invigilation.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.AssignUserDTO;
 import com.se.invigilation.dto.NoticeDTO;
-import com.se.invigilation.exception.XException;
 import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.service.SubjectService;
 import com.se.invigilation.vo.RequestConstant;
 import com.se.invigilation.vo.ResultVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StringUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,79 +25,76 @@ import java.util.Map;
 public class SubjectController {
     private final SubjectService subjectService;
     private final DingtalkService dingtalkService;
-    private final ObjectMapper objectMapper;
 
+    // 获取部门内全部教师
     @GetMapping("users")
     public Mono<ResultVO> getUsers(@RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.listUsers(depid)
                 .map(users -> ResultVO.success(Map.of("users", users)));
     }
 
-    @GetMapping("invis/status/{status}")
-    public Mono<ResultVO> getInvis(@PathVariable int status,
-                                   @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listInvis(depid, status)
-                .map(invigilations -> ResultVO.success(Map.of("invis", invigilations)));
+    // 获取指定状态，指定页，监考
+    @GetMapping("invis/status/{status}/{page}")
+    public Mono<ResultVO> getInvis(@RequestAttribute(RequestConstant.DEPID) String depid,
+                                   @PathVariable int status, @PathVariable int page) {
+        Pageable pageable = PageRequest.of(page - 1, RequestConstant.pageSize);
+        return subjectService.listInvigilations(depid, status, pageable).map((invis) ->
+                ResultVO.success(Map.of("invis", invis)));
+    }
+    // 获取指定状态监考数量
+    @GetMapping("/invis/status/{status}/total")
+    public Mono<ResultVO> getInvisStatusTotal(@RequestAttribute(RequestConstant.DEPID) String depid, @PathVariable int status) {
+        return subjectService.getInvisTotal(depid, status).map((total) ->
+                ResultVO.success(Map.of("total", total)));
     }
 
+    // 更新教师监考状态
     @PostMapping("invistatus")
-    public Mono<ResultVO> postInviStatus(@RequestBody List<User> users, @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.updateUserInviStatus(users)
-                .flatMap(r -> subjectService.listUsers(depid)
-                        .map(users1 -> ResultVO.success(Map.of("users", users1))));
-
+    public Mono<ResultVO> postInviStatus(@RequestBody List<User> users,
+                                         @RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.updateUserInviStatus(users).flatMap((r) ->
+                subjectService.listUsers(depid).map((users1) ->
+                        ResultVO.success(Map.of("users", users1))));
     }
-
+    // 获取指定周/星期的全部课表
     @GetMapping("timetables/weeks/{week}/dayweeks/{dayweek}")
-    public Mono<ResultVO> getTimetables(
-            @PathVariable int week, @PathVariable int dayweek,
-            @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listTimetable(depid, week, dayweek)
-                .map(timetables -> ResultVO.success(Map.of("timetables", timetables)));
+    public Mono<ResultVO> getTimetables(@PathVariable int week,
+                                        @PathVariable int dayweek,
+                                        @RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.listTimetable(depid, week, dayweek).map((timetables) ->
+                ResultVO.success(Map.of("timetables", timetables)));
     }
-
+    // 获取部门教师监考数量
     @GetMapping("invidetails/counts")
     public Mono<ResultVO> getCounts(@RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listInviCount(depid)
-                .map(counts -> ResultVO.success(Map.of("counts", counts)));
+        return subjectService.listUserCounts(depid).map((counts) ->
+                ResultVO.success(Map.of("counts", counts)));
     }
-
-    @GetMapping("invis/{id}")
-    public Mono<ResultVO> getInviDetail(@PathVariable String id) {
-        return subjectService.getInvi(id)
-                .map(invi -> ResultVO.success(Map.of("invi", invi)));
-    }
-
+    // 获取指定日期全部监考
     @GetMapping("invis/dates/{date}")
     public Mono<ResultVO> getDateInvis(@RequestAttribute(RequestConstant.DEPID) String depid,
                                        @PathVariable LocalDate date) {
-        return subjectService.listInvis(depid, date)
-                .map(invigilations -> ResultVO.success(Map.of("invis", invigilations)));
+        return subjectService.listInvigilations(depid, date).map((invigilations) ->
+                ResultVO.success(Map.of("invis", invigilations)));
     }
 
-    @PostMapping("invidetails")
-    public Mono<ResultVO> postInviDetails(@RequestBody AssignUserDTO assignUser) {
-        List<Mono<String>> monos = new ArrayList<>();
-        // 发送取消监考通知，移除日程
-        if (StringUtils.hasLength(assignUser.getCalendarId())){
-            Mono<String> noticeCanM = dingtalkService.noticeCancel(assignUser.getOldDingUserIds(), assignUser.getCancelMessage());
-            Mono<String> delM = dingtalkService.deleteCalender(assignUser.getCreateUnionId(), assignUser.getCalendarId())
-                    .flatMap(r -> subjectService.updateInviCalanderNull(assignUser.getInviId()));
-            monos.add(noticeCanM);
-            monos.add(delM);
-        }
-
-        return Flux.merge(monos).collectList()
-                .flatMap(r -> subjectService.addInvidetails(assignUser)
-                        .map(re -> ResultVO.success(Map.of())));
+    // 取消监原考通知；删除钉钉日程ID；删除全监考详细信息；创建新监考详细信息
+    @PostMapping("invidetails/{inviid}")
+    public Mono<ResultVO> postInviDetails(@PathVariable String inviid,
+                                          @RequestAttribute(RequestConstant.DEPID) String depid,
+                                          @RequestBody AssignUserDTO assignUser) {
+        return dingtalkService.cancel(inviid).flatMap((r) ->
+                subjectService.updateInviCalanderNull(inviid)).flatMap((r) ->
+                subjectService.addInvidetails(inviid, depid, assignUser).map((re) ->
+                        ResultVO.success(Map.of())));
     }
-
+    // 获取指定监考教师信息，及钉钉信息
     @GetMapping("invidetailusers/{inviid}")
     public Mono<ResultVO> getInviUsers(@PathVariable String inviid) {
         return subjectService.listInviDetailUsers(inviid)
                 .map(users -> ResultVO.success(Map.of("users", users)));
     }
-
+    // 发送钉钉监考通知，监考日程
     @PostMapping("assignnotices")
     public Mono<ResultVO> postAssignNotices(@RequestBody NoticeDTO notice) {
         return dingtalkService.noticeAssigners(notice.getUserIds(), notice.getNoticeMessage())
@@ -114,8 +106,7 @@ public class SubjectController {
                                         notice.getUnionIds(),
                                         notice.getNoticeMessage())
                                 .flatMap(code -> subjectService.updateInviCalanderId(notice.getInviId(), code, notice.getCreateUnionId())
-                                        .thenReturn(ResultVO.success(Map.of("code", code)))
-                                )
+                                        .thenReturn(ResultVO.success(Map.of("code", code))))
                 );
     }
 }

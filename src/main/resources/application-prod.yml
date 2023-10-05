@@ -1,6 +1,6 @@
 spring:
-  profiles:
-    include: secret
+  config:
+    import: classpath:application-secret.yml
   sql:
     init:
       mode: always

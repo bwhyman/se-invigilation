@@ -15,11 +15,14 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class Department {
+    public static final int OPEN = 1;
+    public static final int CLOSED = 0;
     @Id
     @CreatedBy
     private String id;
     private String name;
     private String college;
+    private Integer inviStatus;
     @ReadOnlyProperty
     private LocalDateTime insertTime;
     @ReadOnlyProperty

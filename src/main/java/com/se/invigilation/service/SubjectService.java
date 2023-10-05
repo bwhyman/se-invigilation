@@ -16,6 +16,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -42,8 +43,12 @@ public class SubjectService {
     }
 
     //
-    public Mono<List<Invigilation>> listInvis(String depid, int status) {
-        return invigilationRepository.findByDepIdAndStatus(depid, status).collectList();
+    public Mono<List<Invigilation>> listInvigilations(String depid, int status, Pageable pageable) {
+        return invigilationRepository.findByDepIdAndStatus(depid, status, pageable).collectList();
+    }
+
+    public Mono<Integer> getInvisTotal(String depid, int status) {
+        return invigilationRepository.findTotalByByDepIdAndStatus(depid, status);
     }
 
     //
@@ -52,8 +57,7 @@ public class SubjectService {
     public Mono<List<Integer>> updateUserInviStatus(List<User> users) {
         List<Mono<Integer>> monos = new ArrayList<>();
         for (User user : users) {
-            Mono<Integer> integerMono = invigilationRepository.
-                    updateInviStatus(user.getId(), user.getInviStatus());
+            Mono<Integer> integerMono = invigilationRepository.updateInviStatus(user.getId(), user.getInviStatus());
             monos.add(integerMono);
         }
         return Flux.merge(monos).collectList();
@@ -65,43 +69,34 @@ public class SubjectService {
     }
 
     //
-    public Mono<List<InviDetailDTO>> listInviCount(String depid) {
-        return inviDetailRepository.findCount(depid).collectList();
+    public Mono<List<InviDetailDTO>> listUserCounts(String depid) {
+        return inviDetailRepository.findUserCounts(depid).collectList();
     }
 
-    //
-    public Mono<Invigilation> getInvi(String id) {
-        return invigilationRepository.findById(id);
-    }
-
-    public Mono<List<Invigilation>> listInvis(String depid, LocalDate date) {
+    public Mono<List<Invigilation>> listInvigilations(String depid, LocalDate date) {
         return invigilationRepository.findByDepIdAndDate(depid, date).collectList();
     }
 
     @Transactional
     @SneakyThrows
-    public Mono<Invigilation> addInvidetails(AssignUserDTO assignUser) {
+    public Mono<Invigilation> addInvidetails(String inviid, String depid, AssignUserDTO assignUser) {
         String exec = objectMapper.writeValueAsString(assignUser.getExecutor());
         // 删除原监考分配
-        Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(assignUser.getInviId());
+        Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
         // 创建新详细分配
-        Mono<Integer> createInviDetail = Mono.defer(() -> {
-            List<Mono<InviDetail>> monos = new ArrayList<>();
-            for (AssignUserDTO.AssignUser user : assignUser.getExecutor()) {
-                InviDetail d = InviDetail.builder()
-                        .inviId(assignUser.getInviId())
-                        .depId(assignUser.getDepId())
-                        .userId(user.getUserId())
-                        .teacherName(user.getUserName())
-                        .build();
-                Mono<InviDetail> save = inviDetailRepository.save(d);
-                monos.add(save);
-            }
-            return Flux.merge(monos).collectList().thenReturn(1);
-        });
-
+        List<Mono<InviDetail>> monos = new ArrayList<>();
+        for (AssignUserDTO.AssignUser user : assignUser.getExecutor()) {
+            InviDetail d = InviDetail.builder()
+                    .inviId(inviid)
+                    .depId(depid)
+                    .userId(user.getUserId())
+                    .teacherName(user.getUserName())
+                    .build();
+            Mono<InviDetail> save = inviDetailRepository.save(d);
+            monos.add(save);
+        }
         // 更新监考信息
-        Mono<Invigilation> updateInviM = invigilationRepository.findById(assignUser.getInviId())
+        Mono<Invigilation> updateInviM = invigilationRepository.findById(inviid)
                 .flatMap(invi -> {
                     invi.setStatus(Invigilation.ASSIGN);
                     invi.setAllocator(assignUser.getAllocator());
@@ -109,18 +104,23 @@ public class SubjectService {
                     return invigilationRepository.save(invi);
                 });
 
-        return delInviDetailM.flatMap(r -> createInviDetail).flatMap(r -> updateInviM);
-
+        return delInviDetailM.flatMap(r -> Flux.merge(monos).collectList())
+                .flatMap(r -> updateInviM);
     }
 
     public Mono<List<User>> listInviDetailUsers(String inviid) {
         return inviDetailRepository.findByInviId(inviid).collectList();
     }
 
+    @Transactional
     public Mono<String> updateInviCalanderId(String inviid, String calid, String createUnionId) {
-        return invigilationRepository.updateCalanderId(inviid, calid, createUnionId).thenReturn(calid);
+        return invigilationRepository.updateCalanderId(inviid, calid, createUnionId)
+                .thenReturn(calid);
     }
+
+    @Transactional
     public Mono<String> updateInviCalanderNull(String inviid) {
-        return invigilationRepository.updateCalanderIdNull(inviid).thenReturn(inviid);
+        return invigilationRepository.updateCalanderNull(inviid).thenReturn(inviid);
     }
+
 }
