@@ -4,6 +4,7 @@ import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
 import com.se.invigilation.dox.User;
+import com.se.invigilation.dto.InviCountDTO;
 import com.se.invigilation.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -135,5 +136,24 @@ public class CollegeService {
             monos.add(integerMono);
         }
         return Flux.merge(monos).then(Mono.just(1));
+    }
+
+    public Mono<List<User>> listUsersByName(String depid, String name) {
+        return userRepository.findByDepIdAndName(depid, name).collectList();
+    }
+
+    @Transactional
+    public Mono<Integer> updateRole(String account, String role) {
+        return userRepository.updateRole(account, role);
+    }
+
+    public Mono<List<Invigilation>> listInvis(String collid) {
+        return invigilationRepository.findByCollId(collid)
+                .collectList();
+    }
+
+    public Mono<List<InviCountDTO>> listCollCounts(String collid) {
+        return inviDetailRepository.findCollUserCounts(collid)
+                .collectList();
     }
 }

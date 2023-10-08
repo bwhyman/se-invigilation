@@ -52,11 +52,10 @@ public class SubjectController {
     @PostMapping("invistatus")
     public Mono<ResultVO> postInviStatus(@RequestBody List<User> users,
                                          @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.updateUserInviStatus(users).flatMap((r) ->
-                subjectService.listUsers(depid).map((users1) ->
-                        ResultVO.success(Map.of("users", users1))));
+        return subjectService.updateUserInviStatus(users).thenReturn(ResultVO.success(Map.of()));
     }
-    // 获取指定周/星期的全部课表
+
+    // 获取开放状态教师，指定周/星期的全部课表
     @GetMapping("timetables/weeks/{week}/dayweeks/{dayweek}")
     public Mono<ResultVO> getTimetables(@PathVariable int week,
                                         @PathVariable int dayweek,
@@ -67,7 +66,7 @@ public class SubjectController {
     // 获取部门教师监考数量
     @GetMapping("invidetails/counts")
     public Mono<ResultVO> getCounts(@RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listUserCounts(depid).map((counts) ->
+        return subjectService.listDepUserCounts(depid).map((counts) ->
                 ResultVO.success(Map.of("counts", counts)));
     }
     // 获取指定日期全部监考

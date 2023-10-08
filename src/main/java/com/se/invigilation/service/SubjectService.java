@@ -6,7 +6,7 @@ import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.AssignUserDTO;
-import com.se.invigilation.dto.InviDetailDTO;
+import com.se.invigilation.dto.InviCountDTO;
 import com.se.invigilation.repository.InviDetailRepository;
 import com.se.invigilation.repository.InvigilationRepository;
 import com.se.invigilation.repository.TimetableRepository;
@@ -65,12 +65,13 @@ public class SubjectService {
 
     //
     public Mono<List<Timetable>> listTimetable(String depid, int week, int dayweek) {
-        return timetableRepository.findByDepIdAndDate(depid, week, dayweek).collectList();
+        return timetableRepository.findByDepIdAndDate(depid, week, dayweek, User.INVI_STATUS_OPEN)
+                .collectList();
     }
 
     //
-    public Mono<List<InviDetailDTO>> listUserCounts(String depid) {
-        return inviDetailRepository.findUserCounts(depid).collectList();
+    public Mono<List<InviCountDTO>> listDepUserCounts(String depid) {
+        return inviDetailRepository.findDepUserCounts(depid).collectList();
     }
 
     public Mono<List<Invigilation>> listInvigilations(String depid, LocalDate date) {

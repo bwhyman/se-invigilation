@@ -5,6 +5,7 @@ import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.UserDTO;
 import com.se.invigilation.service.AdminService;
+import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.vo.ResultVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AdminController {
     private final AdminService adminService;
+    private final DingtalkService dingtalkService;
 
     //
     @PostMapping("colleges")
@@ -48,9 +50,10 @@ public class AdminController {
             ResultVO.success(Map.of("setting", s)));
     }
 
-    @PostMapping("dingusers")
-    public Mono<ResultVO> postUsers(@RequestBody List<User> users) {
-        return adminService.updateUsersDing(users)
-                .thenReturn(ResultVO.success(Map.of()));
+    // 获取学院教师钉钉信息
+    @GetMapping("dingusers/{dingdepid}")
+    public Mono<ResultVO> getDingUsers(@PathVariable long dingdepid) {
+        return dingtalkService.listDingUsers(dingdepid)
+                .map(dingUsers -> ResultVO.success(Map.of("users", dingUsers)));
     }
 }

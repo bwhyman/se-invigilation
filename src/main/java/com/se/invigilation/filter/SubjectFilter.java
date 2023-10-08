@@ -30,7 +30,7 @@ public class SubjectFilter implements WebFilter {
         ServerHttpRequest request = exchange.getRequest();
         if (includes.matches(request.getPath().pathWithinApplication())) {
             String role = (String) exchange.getAttributes().get(RequestConstant.ROLE);
-            if (User.SUBJECT_ADMIN.equals(role) || User.SUPER_ADMIN.equals(role)) {
+            if (User.SUBJECT_ADMIN.equals(role) || User.COLLEGE_ADMIN.equals(role) || User.SUPER_ADMIN.equals(role)) {
                 return chain.filter(exchange);
             }
             return responseHelper.response(Code.FORBIDDEN, exchange);

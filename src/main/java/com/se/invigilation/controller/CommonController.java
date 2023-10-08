@@ -67,4 +67,9 @@ public class CommonController {
             ResultVO.success(Map.of("invi", invi)));
     }
 
+    @GetMapping("users/{account}")
+    public Mono<ResultVO> getUser(@PathVariable String account) {
+        return commonService.getUser(account)
+                .map(user -> ResultVO.success(Map.of("user", user)));
+    }
 }

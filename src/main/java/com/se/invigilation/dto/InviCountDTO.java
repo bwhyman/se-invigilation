@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class InviDetailDTO {
+public class InviCountDTO {
     private String userId;
     private Integer count;
+    private String name;
 }

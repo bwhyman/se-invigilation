@@ -17,13 +17,6 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             """)
     Flux<User> findByCollId(String collid);
 
-    @Modifying
-    @Query("""
-            update user u set u.ding_union_id=:unionid, u.ding_user_id=:userid, u.mobile=:mobile
-            where u.name=:name
-            """)
-    Mono<Integer> updateByName(String name, String unionid, String userid, String mobile);
-
     @Query("""
             select * from user u where u.department ->> '$.depId'=:depid
             """)
@@ -39,4 +32,15 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             select * from user u where u.department ->> '$.depId'=:depid and u.role=:role;
             """)
     Flux<User> findByDepidAndrole(String depid, String role);
+
+    @Query("""
+            select * from user u where u.department ->> '$.depId'=:depid and u.name=:name;
+            """)
+    Flux<User> findByDepIdAndName(String depid, String name);
+
+    @Modifying
+    @Query("""
+            update user u set u.role=:role where u.account=:account;
+            """)
+    Mono<Integer> updateRole(String account, String role);
 }

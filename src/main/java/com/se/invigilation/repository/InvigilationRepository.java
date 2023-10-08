@@ -67,4 +67,6 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     @Modifying
     @Query("update invigilation iv set iv.calendar_id=null, iv.create_union_id=null where iv.id=:inviid")
     Mono<Integer> updateCalanderNull(String inviid);
+
+    Flux<Invigilation> findByCollId(String collId);
 }

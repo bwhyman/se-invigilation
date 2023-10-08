@@ -11,12 +11,15 @@ import com.aliyun.teautil.models.RuntimeOptions;
 import com.dingtalk.api.DefaultDingTalkClient;
 import com.dingtalk.api.DingTalkClient;
 import com.dingtalk.api.request.OapiMessageCorpconversationAsyncsendV2Request;
+import com.dingtalk.api.request.OapiV2UserListRequest;
 import com.dingtalk.api.response.OapiMessageCorpconversationAsyncsendV2Response;
+import com.dingtalk.api.response.OapiV2UserListResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.se.invigilation.component.DingtalkComponent;
 import com.se.invigilation.dox.User;
+import com.se.invigilation.dto.DingUserListDTO;
 import com.se.invigilation.exception.XException;
 import com.se.invigilation.repository.InvigilationRepository;
 import com.se.invigilation.repository.UserRepository;
@@ -58,17 +61,21 @@ public class DingtalkService {
         noticeClient = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2");
     }
 
+    private String timeStamp(String text) {
+        return text + "\n\n" + "TOKEN: " + LocalDateTime.now().getNano();
+    }
 
     /**
      * 向专业，发送专业监考分配通知
+     *
      * @param userIds "manager4660, 1234, 4545"
      * @return respbody
      */
-    public Mono<String> noticeDispatchers(String userIds) {
+    public Mono<String> noticeDispatchers(String userIds, String message) {
         OapiMessageCorpconversationAsyncsendV2Request.Msg msg = new OapiMessageCorpconversationAsyncsendV2Request.Msg();
         msg.setMsgtype("text");
         OapiMessageCorpconversationAsyncsendV2Request.Text text = new OapiMessageCorpconversationAsyncsendV2Request.Text();
-        text.setContent(timeStamp("已下发新监考信息，请及时分配。"));
+        text.setContent(timeStamp(message));
         msg.setText(text);
 
         OapiMessageCorpconversationAsyncsendV2Request req = new OapiMessageCorpconversationAsyncsendV2Request();
@@ -172,6 +179,7 @@ public class DingtalkService {
             return Mono.error(XException.builder().codeN(200).message(err.getMessage()).build());
         }
     }
+
     public Mono<String> noticeCancel(String userIds, String message) {
         OapiMessageCorpconversationAsyncsendV2Request.Msg msg = new OapiMessageCorpconversationAsyncsendV2Request.Msg();
         msg.setMsgtype("text");
@@ -201,9 +209,12 @@ public class DingtalkService {
                 List<Mono<String>> dingUserIds = new ArrayList<>();
                 try {
                     String message = "监考取消：%s; %s";
-                    List<Map<String, String>> users = objectMapper.readValue(invi.getExecutor(), new TypeReference<>() {});
-                    Map<String, String> time = objectMapper.readValue(invi.getTime(), new TypeReference<>() {});
-                    Map < String, String > course = objectMapper.readValue(invi.getCourse(), new TypeReference<>() {});
+                    List<Map<String, String>> users = objectMapper.readValue(invi.getExecutor(), new TypeReference<>() {
+                    });
+                    Map<String, String> time = objectMapper.readValue(invi.getTime(), new TypeReference<>() {
+                    });
+                    Map<String, String> course = objectMapper.readValue(invi.getCourse(), new TypeReference<>() {
+                    });
                     String cancelMessage = message.formatted(invi.getDate() + " " + time.get("starttime"), course.get("courseName"));
                     for (Map<String, String> user : users) {
                         Mono<String> byId = this.userRepository.findById(user.get("userId")).map(User::getDingUserId);
@@ -222,8 +233,38 @@ public class DingtalkService {
         });
     }
 
-    private String timeStamp(String text) {
-        return text + "\n" + "TOKEN: " + LocalDateTime.now().getNano();
+    // 导出全部用户钉钉信息
+    public Mono<List<DingUserListDTO.DingUser>> listDingUsers(long deptId) {
+        boolean hasNext = true;
+        long nextCursor = 0;
+        List<DingUserListDTO.DingUser> users = new ArrayList<>();
+        try {
+            while (hasNext) {
+                log.debug("DingUserListDTO.Result result");
+                DingUserListDTO.Result result = listUsers(deptId, nextCursor);
+                users.addAll(result.getList());
+                hasNext = result.getHas_more();
+                if (hasNext) {
+                    nextCursor = result.getNext_cursor();
+                }
+            }
+            return Mono.just(users);
+
+        } catch (Exception e) {
+            return Mono.error(XException.builder().codeN(200).message(e.getMessage()).build());
+        }
     }
 
+    private final DingTalkClient listUsersclient = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/v2/user/list");
+
+    private DingUserListDTO.Result listUsers(long deptId, long nextCursor) throws Exception {
+        OapiV2UserListRequest req = new OapiV2UserListRequest();
+        req.setDeptId(deptId);
+        req.setCursor(nextCursor);
+        req.setSize(40L);
+        OapiV2UserListResponse rsp = listUsersclient.execute(req, dingtalkComponent.getDingtalkToken());
+        log.debug(rsp.getBody());
+        DingUserListDTO dingUserListDTO = objectMapper.readValue(rsp.getBody(), DingUserListDTO.class);
+        return dingUserListDTO.getResult();
+    }
 }

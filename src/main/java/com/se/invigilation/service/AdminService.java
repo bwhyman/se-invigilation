@@ -9,7 +9,6 @@ import com.se.invigilation.repository.SettingRepository;
 import com.se.invigilation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,13 +31,11 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    @CacheEvict(value = "settings", allEntries = true)
     public Mono<Integer> updateSetting(String sid, LocalDate startWeek) {
         return settingRepository.update(sid, startWeek.toString());
     }
 
     @Transactional
-    @CacheEvict(value = "settings", allEntries = true)
     public Mono<Setting> addSetting(Setting setting) {
         return settingRepository.save(setting);
     }
@@ -60,13 +57,11 @@ public class AdminService {
         return departmentRepository.findByCollegeIsNull().collectList();
     }
 
-    @CacheEvict(value = "users",  allEntries = true)
     @Transactional
     public Mono<List<User>> addUsers(String collId, String collegeName, List<User> userDTOS) {
         Set<String> departments = userDTOS.stream()
                 .map(User::getDepartment)
                 .collect(Collectors.toSet());
-
         List<Department> departs = new ArrayList<>();
         for (String departName : departments) {
             Department department = Department.builder()
@@ -77,13 +72,19 @@ public class AdminService {
                     .build();
             departs.add(department);
         }
-        return departmentRepository.saveAll(departs).collectList()
+        List<Mono<Department>> monos = new ArrayList<>();
+        for (Department department : departs) {
+            Mono<Department> departmentMono = departmentRepository.findByName(department.getName())
+                    .switchIfEmpty(departmentRepository.save(department));
+            monos.add(departmentMono);
+        }
+        return Flux.merge(monos).collectList()
                 .flatMap(deps -> {
                     List<User> users = new ArrayList<>();
                     for (User userDTO : userDTOS) {
                         Department department = deps.stream()
                                 .filter(dep -> dep.getName().equals(userDTO.getDepartment()))
-                                .findFirst().get();
+                                .findFirst().orElseThrow();
 
                         User user = User.builder()
                                 .name(userDTO.getName())
@@ -92,6 +93,8 @@ public class AdminService {
                                 .password(passwordEncoder.encode(userDTO.getAccount()))
                                 .mobile(userDTO.getMobile())
                                 .role(userDTO.getRole())
+                                .dingUserId(userDTO.getDingUserId())
+                                .dingUnionId(userDTO.getDingUnionId())
                                 .department("""
                                         {"collId": "%s", "collegeName":  "%s", "depId": "%s", "departmentName": "%s"}
                                         """.formatted(collId, collegeName, department.getId(), department.getName()))
@@ -102,20 +105,6 @@ public class AdminService {
                 });
     }
 
-    @Transactional
-    public Mono<Void> updateUsersDing(List<User> users) {
-        List<Mono<Integer>> userMonos = new ArrayList<>();
-        for (User user : users) {
-            Mono<Integer> byName = userRepository.updateByName(user.getName(), user.getDingUnionId(), user.getDingUserId(), user.getMobile());
-            userMonos.add(byName);
-        }
-        return Flux.merge(userMonos).then();
-    }
-
-    /*Mono<List<User>> list() {
-        Pageable pageRequest = PageRequest.of(0, 20);
-        return userRepository.findByCollId("1154814591036186624", pageRequest).collectList();
-    }*/
 
 }
 
