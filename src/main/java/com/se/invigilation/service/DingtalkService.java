@@ -84,11 +84,10 @@ public class DingtalkService {
         req.setMsg(msg);
         try {
             OapiMessageCorpconversationAsyncsendV2Response rsp = noticeClient.execute(req, dingtalkComponent.getDingtalkToken());
-            log.debug("rsp.getCode(): {}", rsp.getCode());
             log.debug("rsp.getBody(): {}", rsp.getBody());
             return Mono.just(rsp.getBody());
         } catch (ApiException e) {
-            return Mono.error(XException.builder().codeN(200).message(e.getMessage()).build());
+            return Mono.error(XException.builder().codeN(400).message(e.getMessage()).build());
         }
     }
 
@@ -109,7 +108,7 @@ public class DingtalkService {
             log.debug("rsp.getBody(): {}", rsp.getBody());
             return Mono.just(rsp.getBody());
         } catch (ApiException e) {
-            return Mono.error(XException.builder().codeN(200).message(e.getMessage()).build());
+            return Mono.error(XException.builder().codeN(400).message(e.getMessage()).build());
         }
     }
 
@@ -160,7 +159,7 @@ public class DingtalkService {
         } catch (Exception _err) {
             TeaException err = new TeaException(_err.getMessage(), _err);
             log.debug("{}/{}", err.getCode(), err.getMessage());
-            return Mono.error(XException.builder().codeN(200).message(err.getMessage()).build());
+            return Mono.error(XException.builder().codeN(400).message(err.getMessage()).build());
         }
     }
 
@@ -176,7 +175,7 @@ public class DingtalkService {
             log.debug("deleteCalender Exception{}", _err.getMessage());
             TeaException err = new TeaException(_err.getMessage(), _err);
             log.debug("{}/{}", err.getCode(), err.getMessage());
-            return Mono.error(XException.builder().codeN(200).message(err.getMessage()).build());
+            return Mono.error(XException.builder().codeN(400).message(err.getMessage()).build());
         }
     }
 
@@ -197,7 +196,7 @@ public class DingtalkService {
             log.debug("rsp.getBody(): {}", rsp.getBody());
             return Mono.just(rsp.getBody());
         } catch (ApiException e) {
-            return Mono.error(XException.builder().codeN(200).message(e.getMessage()).build());
+            return Mono.error(XException.builder().codeN(400).message(e.getMessage()).build());
         }
     }
 
@@ -227,7 +226,7 @@ public class DingtalkService {
                             .flatMap((r) -> deleteCalender(invi.getCreateUnionId(), invi.getCalendarId())).
                             thenReturn(1);
                 } catch (JsonProcessingException var12) {
-                    return Mono.error(XException.builder().codeN(200).message(var12.getMessage()).build());
+                    return Mono.error(XException.builder().codeN(400).message(var12.getMessage()).build());
                 }
             }
         });
@@ -251,7 +250,7 @@ public class DingtalkService {
             return Mono.just(users);
 
         } catch (Exception e) {
-            return Mono.error(XException.builder().codeN(200).message(e.getMessage()).build());
+            return Mono.error(XException.builder().codeN(400).message(e.getMessage()).build());
         }
     }
 

@@ -123,6 +123,7 @@ public class CollegeService {
             invi.setExecutor(null);
             invi.setCalendarId(null);
             invi.setCreateUnionId(null);
+            invi.setNoticeUserIds(null);
             return invigilationRepository.save(invi);
         }).flatMap((r) -> inviDetailRepository.deleteByInviId(inviid));
     }
@@ -143,8 +144,8 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> updateRole(String account, String role) {
-        return userRepository.updateRole(account, role);
+    public Mono<Integer> updateRole(String uid, String role) {
+        return userRepository.updateRole(uid, role);
     }
 
     public Mono<List<Invigilation>> listInvis(String collid) {
@@ -155,5 +156,10 @@ public class CollegeService {
     public Mono<List<InviCountDTO>> listCollCounts(String collid) {
         return inviDetailRepository.findCollUserCounts(collid)
                 .collectList();
+    }
+
+    @Transactional
+    public Mono<Integer> updateUserDepartment(String uid, String depart) {
+        return userRepository.updateDepartment(uid, depart);
     }
 }

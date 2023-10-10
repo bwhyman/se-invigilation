@@ -34,7 +34,7 @@ create table if not exists `department`
 (
     id          char(19)    not null primary key,
     name        varchar(20) not null,
-    college  json        null comment '{collId, collegeName}',
+    college     json        null comment '{collId, collegeName}',
     invi_status tinyint     null     default 1,
     ding_depid  varchar(50) null,
     insert_time datetime    not null default current_timestamp,
@@ -78,6 +78,7 @@ create table if not exists `invigilation`
     status          tinyint     not null,
     calendar_id     varchar(50) null comment 'dingtalk',
     create_union_id varchar(50) null,
+    notice_user_ids json        null comment '[userId]',
     insert_time     datetime    not null default current_timestamp,
     update_time     datetime    not null default current_timestamp on update current_timestamp,
 

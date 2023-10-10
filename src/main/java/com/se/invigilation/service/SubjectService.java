@@ -114,8 +114,8 @@ public class SubjectService {
     }
 
     @Transactional
-    public Mono<String> updateInviCalanderId(String inviid, String calid, String createUnionId) {
-        return invigilationRepository.updateCalanderId(inviid, calid, createUnionId)
+    public Mono<String> updateInviCalanderId(String inviid, String calid, String createUnionId, String noticeIds) {
+        return invigilationRepository.updateCalanderId(inviid, calid, createUnionId, noticeIds)
                 .thenReturn(calid);
     }
 

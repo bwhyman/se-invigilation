@@ -44,7 +44,7 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     @Query("""
             select * from invigilation i
             where i.department ->> '$.depId'=:depId and i.status=:status
-            order by i.date limit :#{#pageable.offset}, :#{#pageable.pageSize}
+            order by i.date desc limit :#{#pageable.offset}, :#{#pageable.pageSize}
             """)
     Flux<Invigilation> findByDepIdAndStatus(String depId, int status, Pageable pageable);
 
@@ -60,12 +60,17 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
 
     @Modifying
     @Query("""
-            update invigilation iv set iv.calendar_id=:calid, iv.create_union_id=:unionid where iv.id=:inviid
+            update invigilation iv set iv.calendar_id=:calid, iv.create_union_id=:unionid,
+            iv.notice_user_ids=:noticeIds
+            where iv.id=:inviid
             """)
-    Mono<Integer> updateCalanderId(String inviid, String calid, String unionid);
+    Mono<Integer> updateCalanderId(String inviid, String calid, String unionid, String noticeIds);
 
     @Modifying
-    @Query("update invigilation iv set iv.calendar_id=null, iv.create_union_id=null where iv.id=:inviid")
+    @Query("""
+            update invigilation iv set iv.calendar_id=null, iv.create_union_id=null, iv.notice_user_ids=null
+            where iv.id=:inviid
+            """)
     Mono<Integer> updateCalanderNull(String inviid);
 
     Flux<Invigilation> findByCollId(String collId);

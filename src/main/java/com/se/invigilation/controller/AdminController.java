@@ -2,7 +2,6 @@ package com.se.invigilation.controller;
 
 import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Setting;
-import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.UserDTO;
 import com.se.invigilation.service.AdminService;
 import com.se.invigilation.service.DingtalkService;
@@ -12,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController

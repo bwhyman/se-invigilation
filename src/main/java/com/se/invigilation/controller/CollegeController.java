@@ -167,7 +167,7 @@ public class CollegeController {
     // 修改指定账号角色
     @PostMapping("roles")
     public Mono<ResultVO> postRole(@RequestBody User user) {
-        return collegeService.updateRole(user.getAccount(), user.getRole())
+        return collegeService.updateRole(user.getId(), user.getRole())
                 .thenReturn(ResultVO.success(Map.of()));
     }
 
@@ -182,5 +182,11 @@ public class CollegeController {
     public Mono<ResultVO> getInvisCounts(@RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.listCollCounts(collid)
                 .map(counts -> ResultVO.success(Map.of("counts", counts)));
+    }
+
+    @PostMapping("departments/updateuser")
+    public Mono<ResultVO> postDepartment(@RequestBody User user) {
+        return collegeService.updateUserDepartment(user.getId(), user.getDepartment())
+                .thenReturn(ResultVO.success(Map.of()));
     }
 }

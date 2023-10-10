@@ -40,7 +40,13 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
 
     @Modifying
     @Query("""
-            update user u set u.role=:role where u.account=:account;
+            update user u set u.role=:role where u.id=:uid;
             """)
-    Mono<Integer> updateRole(String account, String role);
+    Mono<Integer> updateRole(String uid, String role);
+
+    @Modifying
+    @Query("""
+            update user u set u.department=:depart where u.id=:uid
+            """)
+    Mono<Integer> updateDepartment(String uid, String depart);
 }

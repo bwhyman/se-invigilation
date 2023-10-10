@@ -19,6 +19,6 @@ public class NoticeDTO {
     private String etime;
     private List<String> unionIds;
     private String noticeMessage;
-
+    private String noticeUserIds;
     private String userIds;
 }

@@ -41,6 +41,7 @@ public class SubjectController {
         return subjectService.listInvigilations(depid, status, pageable).map((invis) ->
                 ResultVO.success(Map.of("invis", invis)));
     }
+
     // 获取指定状态监考数量
     @GetMapping("/invis/status/{status}/total")
     public Mono<ResultVO> getInvisStatusTotal(@RequestAttribute(RequestConstant.DEPID) String depid, @PathVariable int status) {
@@ -63,12 +64,14 @@ public class SubjectController {
         return subjectService.listTimetable(depid, week, dayweek).map((timetables) ->
                 ResultVO.success(Map.of("timetables", timetables)));
     }
+
     // 获取部门教师监考数量
     @GetMapping("invidetails/counts")
     public Mono<ResultVO> getCounts(@RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.listDepUserCounts(depid).map((counts) ->
                 ResultVO.success(Map.of("counts", counts)));
     }
+
     // 获取指定日期全部监考
     @GetMapping("invis/dates/{date}")
     public Mono<ResultVO> getDateInvis(@RequestAttribute(RequestConstant.DEPID) String depid,
@@ -77,7 +80,7 @@ public class SubjectController {
                 ResultVO.success(Map.of("invis", invigilations)));
     }
 
-    // 取消监原考通知；删除钉钉日程ID；删除全监考详细信息；创建新监考详细信息
+    // 取消监原考通知；删除钉钉日程ID；删除原监考详细信息；创建新监考详细信息
     @PostMapping("invidetails/{inviid}")
     public Mono<ResultVO> postInviDetails(@PathVariable String inviid,
                                           @RequestAttribute(RequestConstant.DEPID) String depid,
@@ -87,12 +90,14 @@ public class SubjectController {
                 subjectService.addInvidetails(inviid, depid, assignUser).map((re) ->
                         ResultVO.success(Map.of())));
     }
+
     // 获取指定监考教师信息，及钉钉信息
     @GetMapping("invidetailusers/{inviid}")
     public Mono<ResultVO> getInviUsers(@PathVariable String inviid) {
         return subjectService.listInviDetailUsers(inviid)
                 .map(users -> ResultVO.success(Map.of("users", users)));
     }
+
     // 发送钉钉监考通知，监考日程
     @PostMapping("assignnotices")
     public Mono<ResultVO> postAssignNotices(@RequestBody NoticeDTO notice) {
@@ -104,8 +109,12 @@ public class SubjectController {
                                         notice.getEtime(),
                                         notice.getUnionIds(),
                                         notice.getNoticeMessage())
-                                .flatMap(code -> subjectService.updateInviCalanderId(notice.getInviId(), code, notice.getCreateUnionId())
-                                        .thenReturn(ResultVO.success(Map.of("code", code))))
+                                .flatMap(eventId -> subjectService.updateInviCalanderId(
+                                                notice.getInviId(),
+                                                eventId, notice.getCreateUnionId(),
+                                                notice.getNoticeUserIds())
+                                        .thenReturn(ResultVO.success(Map.of("code", eventId))))
                 );
     }
+
 }
