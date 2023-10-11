@@ -1,6 +1,7 @@
 package com.se.invigilation.repository;
 
 import com.se.invigilation.dox.Timetable;
+import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
@@ -21,4 +22,10 @@ public interface TimetableRepository extends ReactiveCrudRepository<Timetable, S
     Flux<Timetable> findByDepIdAndDate(String depid, int week, int dayweek, int status);
 
     Mono<Integer> deleteByUserId(String userid);
+
+    @Modifying
+    @Query("""
+            delete from timetable tb where tb.coll_id=:collid
+            """)
+    Mono<Integer> deleteByCollId(String collid);
 }

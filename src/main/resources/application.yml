@@ -12,6 +12,8 @@ spring:
       enabled: true
       initial-size: 1
       validation-query: select 1
+  codec:
+    max-in-memory-size: 2MB
 
   jackson:
     default-property-inclusion: non_null

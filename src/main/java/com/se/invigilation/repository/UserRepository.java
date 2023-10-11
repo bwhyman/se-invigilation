@@ -49,4 +49,10 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             update user u set u.department=:depart where u.id=:uid
             """)
     Mono<Integer> updateDepartment(String uid, String depart);
+
+    @Modifying
+    @Query("""
+            update user u set u.password=:password where u.account=:account;
+            """)
+    Mono<Integer> updatePassword(String account, String password);
 }

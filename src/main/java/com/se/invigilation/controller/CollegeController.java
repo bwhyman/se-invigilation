@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -28,6 +29,7 @@ public class CollegeController {
     private final CollegeService collegeService;
     private final DingtalkService dingtalkService;
     private final SubjectService subjectService;
+    private final PasswordEncoder passwordEncoder;
 
     // 批量导入监考
     @PostMapping("invigilations")
@@ -49,6 +51,7 @@ public class CollegeController {
         return collegeService.listImporteds(collid).map((invis) ->
                 ResultVO.success(Map.of("invis", invis)));
     }
+
     // 按部门，页数，获取下发状态监考
     @GetMapping("invilations/dispatched/{depid}/{page}")
     public Mono<ResultVO> getDispatcheds(@PathVariable String depid, @PathVariable int page) {
@@ -56,6 +59,7 @@ public class CollegeController {
         return collegeService.listDispatchedInvis(depid, pageable).map((invis) ->
                 ResultVO.success(Map.of("invis", invis)));
     }
+
     // 获取指定部门下发状态监考数量
     @GetMapping("invigilations/dispatched/{depid}/total")
     public Mono<ResultVO> getDispatchedTotals(@PathVariable String depid) {
@@ -69,16 +73,23 @@ public class CollegeController {
         return collegeService.updateDispatcher(invigilations).map((r) ->
                 ResultVO.success(Map.of()));
     }
+
     // 获取全学院教师
     @GetMapping("users")
     public Mono<ResultVO> getUsers(@RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.listUser(collid).map((users) ->
                 ResultVO.success(Map.of("users", users)));
     }
-    // 导入全院教师课表
+
+    // 先移除学院课表，导入全院教师课表
     @PostMapping("timetables")
-    public Mono<ResultVO> postTimetables(@RequestBody List<Timetable> timetables) {
-        return collegeService.addTimetables(timetables)
+    public Mono<ResultVO> postTimetables(@RequestAttribute(RequestConstant.COLLID) String collid,
+                                         @RequestBody List<Timetable> timetables) {
+        for (Timetable tb : timetables) {
+            tb.setCollId(collid);
+        }
+        return collegeService.removeCollegeTimetables(collid)
+                .flatMap(r -> collegeService.addTimetables(timetables))
                 .thenReturn(ResultVO.success(Map.of()));
     }
 
@@ -88,6 +99,7 @@ public class CollegeController {
         return collegeService.listUsers(depid, User.SUBJECT_ADMIN).map((users) ->
                 ResultVO.success(Map.of("users", users)));
     }
+
     // 向部门监考分配教师，发送分配监考提醒
     @PostMapping({"dispatchnotices"})
     public Mono<ResultVO> postDispatchNotice(@RequestBody Map<String, String> map) {
@@ -105,7 +117,12 @@ public class CollegeController {
 
     // 导入单教师课表
     @PostMapping("timetables/{userid}")
-    public Mono<ResultVO> postTimetables(@PathVariable String userid, @RequestBody List<Timetable> timetables) {
+    public Mono<ResultVO> postTimetable(@RequestAttribute(RequestConstant.COLLID) String collid,
+                                        @PathVariable String userid,
+                                        @RequestBody List<Timetable> timetables) {
+        for (Timetable tb : timetables) {
+            tb.setCollId(collid);
+        }
         return collegeService.addTimetable(userid, timetables)
                 .thenReturn(ResultVO.success(Map.of()));
     }
@@ -141,6 +158,7 @@ public class CollegeController {
                 collegeService.listDepartments(collid).map((departs) ->
                         ResultVO.success(Map.of("departments", departs))));
     }
+
     // 获取全部部门
     @GetMapping("departments")
     public Mono<ResultVO> getDepartments(@RequestAttribute(RequestConstant.COLLID) String collid) {
@@ -177,6 +195,7 @@ public class CollegeController {
         return collegeService.listInvis(collid)
                 .map(invis -> ResultVO.success(Map.of("invis", invis)));
     }
+
     //获取学院教师监考数量
     @GetMapping("invis/counts")
     public Mono<ResultVO> getInvisCounts(@RequestAttribute(RequestConstant.COLLID) String collid) {
@@ -187,6 +206,21 @@ public class CollegeController {
     @PostMapping("departments/updateuser")
     public Mono<ResultVO> postDepartment(@RequestBody User user) {
         return collegeService.updateUserDepartment(user.getId(), user.getDepartment())
+                .thenReturn(ResultVO.success(Map.of()));
+    }
+
+    // 重置密码
+    @PutMapping("passwords/{account}")
+    public Mono<ResultVO> putPassword(@PathVariable String account) {
+        return collegeService.updatePassword(account)
+                .thenReturn(ResultVO.success(Map.of()));
+    }
+
+    // 手动添加包含钉钉2个账号的用户
+    @PostMapping("users")
+    public Mono<ResultVO> postUser(@RequestBody User user) {
+        user.setPassword(passwordEncoder.encode(user.getAccount()));
+        return collegeService.addUser(user)
                 .thenReturn(ResultVO.success(Map.of()));
     }
 }

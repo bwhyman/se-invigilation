@@ -9,6 +9,7 @@ import com.se.invigilation.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -26,6 +27,7 @@ public class CollegeService {
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
     private final TimetableRepository timetableRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public Mono<Void> addInvigilations(List<Invigilation> invigilations) {
@@ -161,5 +163,21 @@ public class CollegeService {
     @Transactional
     public Mono<Integer> updateUserDepartment(String uid, String depart) {
         return userRepository.updateDepartment(uid, depart);
+    }
+
+    @Transactional
+    public Mono<Integer> updatePassword(String account) {
+        return userRepository.updatePassword(account, passwordEncoder.encode(account))
+                .thenReturn(1);
+    }
+
+    @Transactional
+    public Mono<Integer> removeCollegeTimetables(String collid) {
+        return timetableRepository.deleteByCollId(collid);
+    }
+
+    @Transactional
+    public Mono<Integer> addUser(User user) {
+        return userRepository.save(user).thenReturn(1);
     }
 }

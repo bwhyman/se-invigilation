@@ -47,6 +47,7 @@ create table if not exists `department`
 create table if not exists `timetable`
 (
     id           char(19)   not null primary key,
+    coll_id      char(19)   not null,
     dep_id       char(19)   not null,
     startweek    tinyint    not null,
     endweek      tinyint    not null,
@@ -58,6 +59,7 @@ create table if not exists `timetable`
     insert_time  datetime   not null default current_timestamp,
     update_time  datetime   not null default current_timestamp on update current_timestamp,
 
+    index (coll_id),
     index (dep_id, dayweek, startweek, endweek),
     index (user_id)
 );
