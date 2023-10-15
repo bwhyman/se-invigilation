@@ -83,11 +83,10 @@ public class SubjectController {
     // 取消监原考通知；删除钉钉日程ID；删除原监考详细信息；创建新监考详细信息
     @PostMapping("invidetails/{inviid}")
     public Mono<ResultVO> postInviDetails(@PathVariable String inviid,
-                                          @RequestAttribute(RequestConstant.DEPID) String depid,
                                           @RequestBody AssignUserDTO assignUser) {
         return dingtalkService.cancel(inviid).flatMap((r) ->
                 subjectService.updateInviCalanderNull(inviid)).flatMap((r) ->
-                subjectService.addInvidetails(inviid, depid, assignUser).map((re) ->
+                subjectService.addInvidetails(inviid, assignUser).map((re) ->
                         ResultVO.success(Map.of())));
     }
 

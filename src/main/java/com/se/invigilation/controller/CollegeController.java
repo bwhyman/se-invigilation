@@ -178,7 +178,7 @@ public class CollegeController {
     public Mono<ResultVO> postAssigns(@PathVariable String inviid, @RequestBody AssignUserDTO assignUser) {
         return dingtalkService.cancel(inviid).flatMap((r) ->
                 subjectService.updateInviCalanderNull(inviid)).flatMap((r) ->
-                subjectService.addInvidetails(inviid, assignUser.getDepId(), assignUser).map((re) ->
+                subjectService.addInvidetails(inviid, assignUser).map((re) ->
                         ResultVO.success(Map.of())));
     }
 

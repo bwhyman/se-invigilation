@@ -12,7 +12,6 @@ import java.util.List;
 @Data
 @Builder
 public class AssignUserDTO {
-    private String depId;
     private String allocator;
     private List<AssignUser> executor;
 

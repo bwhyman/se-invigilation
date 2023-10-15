@@ -14,7 +14,7 @@ public interface TimetableRepository extends ReactiveCrudRepository<Timetable, S
     @Query("""
             select * from timetable t join user u
             on t.user_id=u.id
-            where t.dep_id=:depid
+            where u.department ->> '$.depId'=:depid
             and t.dayweek=:dayweek
             and t.startweek<=:week and t.endweek>=:week
             and u.invi_status=:status

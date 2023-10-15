@@ -15,7 +15,7 @@ public interface InviDetailRepository extends ReactiveCrudRepository<InviDetail,
             select i.user_id as user_id, u.name, count(i.id) as count
             from invi_detail i join user u
             on i.user_id=u.id
-            where i.dep_id=:depid
+            where u.department ->> '$.depId'=:depid
             group by i.user_id
             """)
     Flux<InviCountDTO> findDepUserCounts(String depid);

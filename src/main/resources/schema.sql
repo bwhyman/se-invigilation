@@ -7,7 +7,7 @@ create table if not exists `setting`
     insert_time datetime    not null default current_timestamp,
     update_time datetime    not null default current_timestamp on update current_timestamp,
 
-    index (`key`)
+    unique (`key`)
 );
 
 create table if not exists `user`
@@ -48,7 +48,6 @@ create table if not exists `timetable`
 (
     id           char(19)   not null primary key,
     coll_id      char(19)   not null,
-    dep_id       char(19)   not null,
     startweek    tinyint    not null,
     endweek      tinyint    not null,
     dayweek      tinyint    not null,
@@ -60,7 +59,7 @@ create table if not exists `timetable`
     update_time  datetime   not null default current_timestamp on update current_timestamp,
 
     index (coll_id),
-    index (dep_id, dayweek, startweek, endweek),
+    index (dayweek, startweek, endweek),
     index (user_id)
 );
 
@@ -92,7 +91,6 @@ create table if not exists `invigilation`
 create table if not exists `invi_detail`
 (
     id           char(19)   not null primary key,
-    dep_id       char(19)   not null,
     invi_id      char(19)   not null,
     user_id      char(19)   not null,
     teacher_name varchar(6) not null,
@@ -100,7 +98,6 @@ create table if not exists `invi_detail`
     update_time  datetime   not null default current_timestamp on update current_timestamp,
 
     index (invi_id),
-    index (dep_id),
     index (user_id)
 );
 

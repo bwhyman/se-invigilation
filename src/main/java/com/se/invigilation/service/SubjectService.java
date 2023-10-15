@@ -80,7 +80,7 @@ public class SubjectService {
 
     @Transactional
     @SneakyThrows
-    public Mono<Invigilation> addInvidetails(String inviid, String depid, AssignUserDTO assignUser) {
+    public Mono<Invigilation> addInvidetails(String inviid, AssignUserDTO assignUser) {
         String exec = objectMapper.writeValueAsString(assignUser.getExecutor());
         // 删除原监考分配
         Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
@@ -89,7 +89,6 @@ public class SubjectService {
         for (AssignUserDTO.AssignUser user : assignUser.getExecutor()) {
             InviDetail d = InviDetail.builder()
                     .inviId(inviid)
-                    .depId(depid)
                     .userId(user.getUserId())
                     .teacherName(user.getUserName())
                     .build();

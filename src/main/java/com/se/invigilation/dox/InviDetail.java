@@ -18,7 +18,6 @@ public class InviDetail {
     @Id
     @CreatedBy
     private String id;
-    private String depId;
     private String inviId;
     private String userId;
     private String teacherName;

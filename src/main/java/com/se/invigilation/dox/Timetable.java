@@ -19,7 +19,6 @@ public class Timetable {
     @CreatedBy
     private String id;
     private String collId;
-    private String depId;
     private Integer startweek;
     private Integer endweek;
     private Integer dayweek;
