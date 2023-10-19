@@ -52,7 +52,7 @@ public class CollegeService {
     }
 
     public Mono<Integer> getdispatchedTotal(String depid) {
-        return invigilationRepository.findIDispatchedTotal(depid);
+        return invigilationRepository.findDispatchedTotal(depid);
     }
 
     public Mono<List<Invigilation>> listDispatchedInvis(String depid, Pageable pageable) {
@@ -179,5 +179,10 @@ public class CollegeService {
     @Transactional
     public Mono<Integer> addUser(User user) {
         return userRepository.save(user).thenReturn(1);
+    }
+
+    public Mono<List<Invigilation>> listInvisByDate(String collid, String sdate, String edate) {
+        return invigilationRepository.findByDate(collid, sdate, edate)
+                .collectList();
     }
 }

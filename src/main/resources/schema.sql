@@ -84,6 +84,7 @@ create table if not exists `invigilation`
     update_time     datetime    not null default current_timestamp on update current_timestamp,
 
     index (coll_id, status),
+    index (coll_id, date),
     index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin), status),
     index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin), date)
 );

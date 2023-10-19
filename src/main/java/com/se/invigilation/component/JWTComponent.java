@@ -25,7 +25,7 @@ public class JWTComponent {
     @Value("${my.secretkey}")
     private String secretkey;
     public String encode(Map<String, Object> map) {
-        LocalDateTime time = LocalDateTime.now().plusMonths(1);
+        LocalDateTime time = LocalDateTime.now().plusMonths(12);
         return JWT.create()
                 .withPayload(map)
                 .withIssuedAt(new Date())

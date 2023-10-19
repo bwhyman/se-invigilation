@@ -26,7 +26,7 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
             select count(i.id) from invigilation i
             where i.department ->> '$.depId'=:depId and i.status in (1,2)
             """)
-    Mono<Integer> findIDispatchedTotal(String depid);
+    Mono<Integer> findDispatchedTotal(String depid);
 
     @Query("""
             select * from invigilation i
@@ -74,4 +74,11 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     Mono<Integer> updateCalanderNull(String inviid);
 
     Flux<Invigilation> findByCollId(String collId);
+
+    @Query("""
+            select * from invigilation i
+            where i.coll_id=:collid and i.date>=:sdate and i.date<=:edate
+            order by i.date;
+            """)
+    Flux<Invigilation> findByDate(String collid, String sdate, String edate);
 }

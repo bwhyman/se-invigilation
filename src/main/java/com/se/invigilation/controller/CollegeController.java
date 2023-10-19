@@ -223,4 +223,14 @@ public class CollegeController {
         return collegeService.addUser(user)
                 .thenReturn(ResultVO.success(Map.of()));
     }
+
+    // 加载指定日期内全部监考
+    @GetMapping("invis/date/{sdate}/{edate}")
+    public Mono<ResultVO> getinvisDate(
+            @PathVariable String sdate,
+            @PathVariable String edate,
+            @RequestAttribute(RequestConstant.COLLID) String collid) {
+        return collegeService.listInvisByDate(collid, sdate, edate)
+                .map(invis -> ResultVO.success(Map.of("invis", invis)));
+    }
 }

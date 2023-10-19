@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +62,8 @@ public class DingtalkService {
     }
 
     private String timeStamp(String text) {
-        return text + "\n\n" + "TOKEN: " + LocalDateTime.now().getNano();
+        String token = String.valueOf(LocalTime.now().getNano()).substring(0, 6);
+        return text + "\n\n" + "TOKEN: " + token;
     }
 
     /**
