@@ -80,6 +80,7 @@ create table if not exists `invigilation`
     calendar_id     varchar(50) null comment 'dingtalk',
     create_union_id varchar(50) null,
     notice_user_ids json        null comment '[userId]',
+    remark varchar(100) null ,
     insert_time     datetime    not null default current_timestamp,
     update_time     datetime    not null default current_timestamp on update current_timestamp,
 

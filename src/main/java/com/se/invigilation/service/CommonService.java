@@ -1,9 +1,7 @@
 package com.se.invigilation.service;
 
-import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
-import com.se.invigilation.repository.InvigilationRepository;
 import com.se.invigilation.repository.SettingRepository;
 import com.se.invigilation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,6 @@ public class CommonService {
     private final SettingRepository settingRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final InvigilationRepository invigilationRepository;
 
     public Mono<User> getUser(String account) {
         return userRepository.findByAccount(account);
@@ -37,7 +34,8 @@ public class CommonService {
         return userRepository.updatePasswordById(uid, this.passwordEncoder.encode(password));
     }
 
-    public Mono<Invigilation> getInvigilation(String id) {
-        return invigilationRepository.findById(id);
+    public Mono<List<User>> listUsersDingIds(List<String> ids) {
+        return userRepository.findDingIdByIds(ids)
+                .collectList();
     }
 }

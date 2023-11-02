@@ -1,6 +1,5 @@
 package com.se.invigilation.dto;
 
-import com.se.invigilation.dox.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,13 +7,12 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Builder
-public class AssignUserDTO {
-    private String department;
-    private String allocator;
-    private List<User> users;
-    private String executor;
+public class NoticeRemarkDTO {
+    private String dingUserIds;
+    private List<String> inviIds;
+    private String remark;
 }

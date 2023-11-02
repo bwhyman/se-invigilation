@@ -51,9 +51,15 @@ public class SubjectController {
 
     // 更新教师监考状态
     @PostMapping("invistatus")
-    public Mono<ResultVO> postInviStatus(@RequestBody List<User> users,
-                                         @RequestAttribute(RequestConstant.DEPID) String depid) {
+    public Mono<ResultVO> postInviStatus(@RequestBody List<User> users) {
         return subjectService.updateUserInviStatus(users).thenReturn(ResultVO.success(Map.of()));
+    }
+
+    @GetMapping("invis/{id}")
+    public Mono<ResultVO> getInviDetail(@PathVariable String id,
+                                        @RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.getInvigilation(depid, id).map((invi) ->
+                ResultVO.success(Map.of("invi", invi)));
     }
 
     // 获取开放状态教师，指定周/星期的全部课表
@@ -80,12 +86,11 @@ public class SubjectController {
                 ResultVO.success(Map.of("invis", invigilations)));
     }
 
-    // 取消监原考通知；删除钉钉日程ID；删除原监考详细信息；创建新监考详细信息
+    // 删除原监考详细信息；创建新监考详细信息
     @PostMapping("invidetails/{inviid}")
     public Mono<ResultVO> postInviDetails(@PathVariable String inviid,
                                           @RequestBody AssignUserDTO assignUser) {
-        return dingtalkService.cancel(inviid).flatMap((r) ->
-                subjectService.updateInviCalanderNull(inviid)).flatMap((r) ->
+        return subjectService.updateInviCalanderNull(inviid).flatMap((r) ->
                 subjectService.addInvidetails(inviid, assignUser).map((re) ->
                         ResultVO.success(Map.of())));
     }
@@ -100,7 +105,7 @@ public class SubjectController {
     // 发送钉钉监考通知，监考日程
     @PostMapping("assignnotices")
     public Mono<ResultVO> postAssignNotices(@RequestBody NoticeDTO notice) {
-        return dingtalkService.noticeAssigners(notice.getUserIds(), notice.getNoticeMessage())
+        return dingtalkService.sendNotice(notice.getUserIds(), notice.getNoticeMessage())
                 .flatMap(result ->
                         dingtalkService.addCalander(notice.getCreateUnionId(),
                                         notice.getDate(),

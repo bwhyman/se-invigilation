@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Repository
 public interface UserRepository extends ReactiveCrudRepository<User, String> {
 
@@ -55,4 +57,9 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             update user u set u.password=:password where u.account=:account;
             """)
     Mono<Integer> updatePassword(String account, String password);
+
+    @Query("""
+            select u.ding_user_id, u.ding_union_id,u.id from user u where u.id in (:ids) group by u.id;
+            """)
+    Flux<User> findDingIdByIds(List<String> ids);
 }

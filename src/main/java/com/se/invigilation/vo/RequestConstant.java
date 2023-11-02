@@ -1,7 +1,7 @@
 package com.se.invigilation.vo;
 
 public interface RequestConstant {
-    int pageSize = 40;
+    int pageSize = 20;
     String TOKEN = "token";
     String UID = "uid";
     String ROLE = "role";

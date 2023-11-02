@@ -5,6 +5,8 @@ import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.AssignUserDTO;
+import com.se.invigilation.dto.NoticeDTO;
+import com.se.invigilation.dto.NoticeRemarkDTO;
 import com.se.invigilation.service.CollegeService;
 import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.service.SubjectService;
@@ -102,8 +104,8 @@ public class CollegeController {
 
     // 向部门监考分配教师，发送分配监考提醒
     @PostMapping({"dispatchnotices"})
-    public Mono<ResultVO> postDispatchNotice(@RequestBody Map<String, String> map) {
-        return dingtalkService.noticeDispatchers(map.get("userIds"), map.get("message")).map((result) ->
+    public Mono<ResultVO> postDispatchNotice(@RequestBody NoticeDTO notice) {
+        return dingtalkService.sendNotice(notice.getUserIds(), notice.getNoticeMessage()).map((result) ->
                         ResultVO.success(Map.of("dingResp", result)))
                 .onErrorResume((e) -> Mono.just(ResultVO.error(400, e.getMessage())));
     }
@@ -127,12 +129,11 @@ public class CollegeController {
                 .thenReturn(ResultVO.success(Map.of()));
     }
 
-    // 发送钉钉取消通知；删除监考详细信息，删除监考信息
+    // 删除监考详细信息，删除监考信息
     @DeleteMapping("invigilations/{inviid}")
     public Mono<ResultVO> deleteInvigilation(@PathVariable String inviid) {
-        return dingtalkService.cancel(inviid).flatMap((r) ->
-                        collegeService.removeInvigilation(inviid)).
-                thenReturn(ResultVO.success(Map.of()));
+        return collegeService.removeInvigilation(inviid).
+        thenReturn(ResultVO.success(Map.of()));
     }
 
     // 更新监考基本信息
@@ -142,11 +143,10 @@ public class CollegeController {
                 .thenReturn(ResultVO.success(Map.of()));
     }
 
-    // 发送取消监考通知；重置监考至导入状态
+    // 重置监考至导入状态
     @PutMapping("invigilations/{inviid}/status")
     public Mono<ResultVO> putInvigilationStatus(@PathVariable String inviid) {
-        return dingtalkService.cancel(inviid).flatMap((r) ->
-                        collegeService.resetInvigilation(inviid))
+        return collegeService.resetInvigilation(inviid)
                 .thenReturn(ResultVO.success(Map.of()));
     }
 
@@ -176,8 +176,7 @@ public class CollegeController {
     // 教师自己的主考，学院要自己分配
     @PostMapping("assigns/invis/{inviid}")
     public Mono<ResultVO> postAssigns(@PathVariable String inviid, @RequestBody AssignUserDTO assignUser) {
-        return dingtalkService.cancel(inviid).flatMap((r) ->
-                subjectService.updateInviCalanderNull(inviid)).flatMap((r) ->
+        return subjectService.updateInviCalanderNull(inviid).flatMap((r) ->
                 subjectService.addInvidetails(inviid, assignUser).map((re) ->
                         ResultVO.success(Map.of())));
     }
@@ -232,5 +231,20 @@ public class CollegeController {
             @RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.listInvisByDate(collid, sdate, edate)
                 .map(invis -> ResultVO.success(Map.of("invis", invis)));
+    }
+
+    // 发送监考备注工作通知
+    @PostMapping("invinotices")
+    public Mono<ResultVO> postDingIds(@RequestBody NoticeRemarkDTO notice) {
+        return collegeService.updateInviRemark(notice.getInviIds(), notice.getRemark())
+                .flatMap(c -> dingtalkService.sendNotice(notice.getDingUserIds(), notice.getRemark())
+                        .map(result -> ResultVO.success(Map.of("result", result))));
+    }
+
+    @GetMapping("invis/{id}")
+    public Mono<ResultVO> getInviDetail(@PathVariable String id,
+                                        @RequestAttribute(RequestConstant.COLLID) String collid) {
+        return collegeService.getInvigilation(collid, id).map((invi) ->
+                ResultVO.success(Map.of("invi", invi)));
     }
 }

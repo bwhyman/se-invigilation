@@ -1,6 +1,5 @@
 package com.se.invigilation.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.se.invigilation.dox.InviDetail;
 import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
@@ -12,13 +11,13 @@ import com.se.invigilation.repository.InvigilationRepository;
 import com.se.invigilation.repository.TimetableRepository;
 import com.se.invigilation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,7 +33,6 @@ public class SubjectService {
     private final InvigilationRepository invigilationRepository;
     private final TimetableRepository timetableRepository;
     private final InviDetailRepository inviDetailRepository;
-    private final ObjectMapper objectMapper;
 
     //
     @Cacheable(value = "users", key = "{#depid}")
@@ -63,6 +61,10 @@ public class SubjectService {
         return Flux.merge(monos).collectList();
     }
 
+    public Mono<Invigilation> getInvigilation(String depId, String inviid) {
+        return invigilationRepository.findByDepId(depId, inviid);
+    }
+
     //
     public Mono<List<Timetable>> listTimetable(String depid, int week, int dayweek) {
         return timetableRepository.findByDepIdAndDate(depid, week, dayweek, User.INVI_STATUS_OPEN)
@@ -79,18 +81,16 @@ public class SubjectService {
     }
 
     @Transactional
-    @SneakyThrows
     public Mono<Invigilation> addInvidetails(String inviid, AssignUserDTO assignUser) {
-        String exec = objectMapper.writeValueAsString(assignUser.getExecutor());
         // 删除原监考分配
         Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
         // 创建新详细分配
         List<Mono<InviDetail>> monos = new ArrayList<>();
-        for (AssignUserDTO.AssignUser user : assignUser.getExecutor()) {
+        for (User user : assignUser.getUsers()) {
             InviDetail d = InviDetail.builder()
                     .inviId(inviid)
-                    .userId(user.getUserId())
-                    .teacherName(user.getUserName())
+                    .userId(user.getId())
+                    .teacherName(user.getName())
                     .build();
             Mono<InviDetail> save = inviDetailRepository.save(d);
             monos.add(save);
@@ -98,9 +98,12 @@ public class SubjectService {
         // 更新监考信息
         Mono<Invigilation> updateInviM = invigilationRepository.findById(inviid)
                 .flatMap(invi -> {
+                    if (StringUtils.hasLength(assignUser.getDepartment())) {
+                        invi.setDepartment(assignUser.getDepartment());
+                    }
                     invi.setStatus(Invigilation.ASSIGN);
                     invi.setAllocator(assignUser.getAllocator());
-                    invi.setExecutor(exec);
+                    invi.setExecutor(assignUser.getExecutor());
                     return invigilationRepository.save(invi);
                 });
 

@@ -38,7 +38,7 @@ public class Invigilation {
     private String createUnionId;
     private String calendarId;
     private String noticeUserIds;
-
+    private String remark;
     @ReadOnlyProperty
     private LocalDateTime insertTime;
     @ReadOnlyProperty

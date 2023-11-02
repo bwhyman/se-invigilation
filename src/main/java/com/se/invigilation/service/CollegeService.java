@@ -119,6 +119,7 @@ public class CollegeService {
     public Mono<Integer> resetInvigilation(String inviid) {
         return invigilationRepository.findById(inviid).flatMap((invi) -> {
             invi.setStatus(Invigilation.IMPORT);
+            invi.setRemark(null);
             invi.setDepartment(null);
             invi.setDispatcher(null);
             invi.setAllocator(null);
@@ -184,5 +185,14 @@ public class CollegeService {
     public Mono<List<Invigilation>> listInvisByDate(String collid, String sdate, String edate) {
         return invigilationRepository.findByDate(collid, sdate, edate)
                 .collectList();
+    }
+
+    @Transactional
+    public Mono<Integer> updateInviRemark(List<String> inviIds, String remark) {
+        return invigilationRepository.updateRemarks(inviIds, remark);
+    }
+
+    public Mono<Invigilation> getInvigilation(String collid, String inviid) {
+        return invigilationRepository.findByCollId(collid, inviid);
     }
 }

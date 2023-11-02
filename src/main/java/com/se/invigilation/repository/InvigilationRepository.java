@@ -10,6 +10,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 
 
 @Repository
@@ -58,6 +59,18 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
             """)
     Flux<Invigilation> findByDepIdAndDate(String depid, LocalDate date);
 
+    @Query("""
+            select * from invigilation i
+            where i.department ->> '$.depId'=:depId and i.id=:inviid;
+            """)
+    Mono<Invigilation> findByDepId(String depId, String inviid);
+
+    @Query("""
+            select * from invigilation i
+            where i.coll_id=:collid and i.id=:inviid;
+            """)
+    Mono<Invigilation> findByCollId(String collid, String inviid);
+
     @Modifying
     @Query("""
             update invigilation iv set iv.calendar_id=:calid, iv.create_union_id=:unionid,
@@ -81,4 +94,10 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
             order by i.date;
             """)
     Flux<Invigilation> findByDate(String collid, String sdate, String edate);
+
+    @Modifying
+    @Query("""
+            update invigilation i set i.remark=:remark where i.id in (:ids)
+            """)
+    Mono<Integer> updateRemarks(List<String> ids, String remark);
 }

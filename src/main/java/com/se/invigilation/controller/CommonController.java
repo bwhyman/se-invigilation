@@ -7,6 +7,7 @@ import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.DepartmentDTO;
 import com.se.invigilation.exception.Code;
 import com.se.invigilation.service.CommonService;
+import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.vo.RequestConstant;
 import com.se.invigilation.vo.ResultVO;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -27,6 +29,7 @@ public class CommonController {
     private final PasswordEncoder encoder;
     private final JWTComponent jwtComponent;
     private final ObjectMapper objectMapper;
+    private final DingtalkService dingtalkService;
 
     @PostMapping("login")
     public Mono<ResultVO> login(@RequestBody User user, ServerHttpResponse response) {
@@ -61,15 +64,23 @@ public class CommonController {
                 thenReturn(ResultVO.success(Map.of()));
     }
 
-    @GetMapping("invis/{id}")
-    public Mono<ResultVO> getInviDetail(@PathVariable String id) {
-        return commonService.getInvigilation(id).map((invi) ->
-            ResultVO.success(Map.of("invi", invi)));
-    }
-
     @GetMapping("users/{account}")
     public Mono<ResultVO> getUser(@PathVariable String account) {
         return commonService.getUser(account)
                 .map(user -> ResultVO.success(Map.of("user", user)));
+    }
+
+    // 获取指定全部用户的DING IDS。虽然是获取，但通过post传递参数较方便
+    @PostMapping("invinotices/dingids")
+    public Mono<ResultVO> postUserIds(@RequestBody List<String> ids) {
+        return commonService.listUsersDingIds(ids)
+                .map(users -> ResultVO.success(Map.of("users", users)));
+    }
+
+    // 发送监考取消通知，删除钉钉日程
+    @DeleteMapping("invinotices/{inviid}")
+    public Mono<ResultVO> deleteInvigilation(@PathVariable String inviid) {
+        return dingtalkService.cancel(inviid).
+                thenReturn(ResultVO.success(Map.of()));
     }
 }

@@ -72,7 +72,7 @@ public class DingtalkService {
      * @param userIds "manager4660, 1234, 4545"
      * @return respbody
      */
-    public Mono<String> noticeDispatchers(String userIds, String message) {
+    public Mono<String> sendNotice(String userIds, String message) {
         OapiMessageCorpconversationAsyncsendV2Request.Msg msg = new OapiMessageCorpconversationAsyncsendV2Request.Msg();
         msg.setMsgtype("text");
         OapiMessageCorpconversationAsyncsendV2Request.Text text = new OapiMessageCorpconversationAsyncsendV2Request.Text();
@@ -85,27 +85,6 @@ public class DingtalkService {
         req.setMsg(msg);
         try {
             OapiMessageCorpconversationAsyncsendV2Response rsp = noticeClient.execute(req, dingtalkComponent.getDingtalkToken());
-            log.debug("rsp.getBody(): {}", rsp.getBody());
-            return Mono.just(rsp.getBody());
-        } catch (ApiException e) {
-            return Mono.error(XException.builder().codeN(400).message(e.getMessage()).build());
-        }
-    }
-
-    public Mono<String> noticeAssigners(String userIds, String message) {
-        OapiMessageCorpconversationAsyncsendV2Request.Msg msg = new OapiMessageCorpconversationAsyncsendV2Request.Msg();
-        msg.setMsgtype("text");
-        OapiMessageCorpconversationAsyncsendV2Request.Text text = new OapiMessageCorpconversationAsyncsendV2Request.Text();
-        text.setContent(timeStamp(message));
-        msg.setText(text);
-
-        OapiMessageCorpconversationAsyncsendV2Request req = new OapiMessageCorpconversationAsyncsendV2Request();
-        req.setAgentId(Long.valueOf(agentId));
-        req.setUseridList(userIds);
-        req.setMsg(msg);
-        try {
-            OapiMessageCorpconversationAsyncsendV2Response rsp = noticeClient.execute(req, dingtalkComponent.getDingtalkToken());
-            log.debug("rsp.getCode(): {}", rsp.getCode());
             log.debug("rsp.getBody(): {}", rsp.getBody());
             return Mono.just(rsp.getBody());
         } catch (ApiException e) {

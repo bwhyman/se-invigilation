@@ -19,6 +19,8 @@ public class NoticeDTO {
     private String etime;
     private List<String> unionIds;
     private String noticeMessage;
+    // 记录在invigilation表的用户通知数组
     private String noticeUserIds;
+    // dinguserids
     private String userIds;
 }
