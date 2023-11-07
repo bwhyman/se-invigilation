@@ -62,4 +62,11 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             select u.ding_user_id, u.ding_union_id,u.id from user u where u.id in (:ids) group by u.id;
             """)
     Flux<User> findDingIdByIds(List<String> ids);
+
+    @Query("""
+            select u.id as id, u.name as name, u.ding_user_id as ding_user_id, u.ding_union_id as ding_union_id
+            from invi_detail i, user u
+            where i.invi_id=:inviid and i.user_id=u.id group by u.id;
+            """)
+    Flux<User> findByInviId(String inviid);
 }

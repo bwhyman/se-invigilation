@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalTime;
@@ -133,8 +132,6 @@ public class DingtalkService {
                     createEventRequest,
                     createEventHeaders,
                     new RuntimeOptions());
-            log.debug("resp.getBody(): {}", resp.getBody());
-            log.debug("resp.getBody().getId(): {}", resp.getBody().getId());
             return Mono.just(resp.getBody().getId());
         } catch (Exception _err) {
             TeaException err = new TeaException(_err.getMessage(), _err);
@@ -159,50 +156,22 @@ public class DingtalkService {
         }
     }
 
-    public Mono<String> noticeCancel(String userIds, String message) {
-        OapiMessageCorpconversationAsyncsendV2Request.Msg msg = new OapiMessageCorpconversationAsyncsendV2Request.Msg();
-        msg.setMsgtype("text");
-        OapiMessageCorpconversationAsyncsendV2Request.Text text = new OapiMessageCorpconversationAsyncsendV2Request.Text();
-        text.setContent(timeStamp(message));
-        msg.setText(text);
-
-        OapiMessageCorpconversationAsyncsendV2Request req = new OapiMessageCorpconversationAsyncsendV2Request();
-        req.setAgentId(Long.valueOf(agentId));
-        req.setUseridList(userIds);
-        req.setMsg(msg);
-        try {
-            OapiMessageCorpconversationAsyncsendV2Response rsp = noticeClient.execute(req, dingtalkComponent.getDingtalkToken());
-            log.debug("rsp.getCode(): {}", rsp.getCode());
-            log.debug("rsp.getBody(): {}", rsp.getBody());
-            return Mono.just(rsp.getBody());
-        } catch (ApiException e) {
-            return Mono.error(XException.builder().codeN(400).message(e.getMessage()).build());
-        }
-    }
-
     public Mono<Integer> cancel(String inviid) {
-        return this.invigilationRepository.findById(inviid).flatMap((invi) -> {
+        return invigilationRepository.findById(inviid).flatMap((invi) -> {
             if (!StringUtils.hasLength(invi.getCalendarId())) {
                 return Mono.just(0);
             } else {
-                List<Mono<String>> dingUserIds = new ArrayList<>();
                 try {
                     String message = "监考取消：%s; %s";
-                    List<Map<String, String>> users = objectMapper.readValue(invi.getExecutor(), new TypeReference<>() {
-                    });
                     Map<String, String> time = objectMapper.readValue(invi.getTime(), new TypeReference<>() {
                     });
                     Map<String, String> course = objectMapper.readValue(invi.getCourse(), new TypeReference<>() {
                     });
                     String cancelMessage = message.formatted(invi.getDate() + " " + time.get("starttime"), course.get("courseName"));
-                    for (Map<String, String> user : users) {
-                        Mono<String> byId = this.userRepository.findById(user.get("userId")).map(User::getDingUserId);
-                        dingUserIds.add(byId);
-                    }
-
-                    return Flux.merge(dingUserIds).collectList().
-                            map((userIds) -> String.join(",", userIds))
-                            .flatMap((ids) -> noticeCancel(ids, cancelMessage))
+                    return userRepository.findByInviId(inviid).collectList()
+                            .map(users -> users.stream().map(User::getDingUserId).toList())
+                            .map((userIds) -> String.join(",", userIds))
+                            .flatMap((ids) -> sendNotice(ids, cancelMessage))
                             .flatMap((r) -> deleteCalender(invi.getCreateUnionId(), invi.getCalendarId())).
                             thenReturn(1);
                 } catch (JsonProcessingException var12) {

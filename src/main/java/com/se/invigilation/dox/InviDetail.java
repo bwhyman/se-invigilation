@@ -20,7 +20,6 @@ public class InviDetail {
     private String id;
     private String inviId;
     private String userId;
-    private String teacherName;
 
     @ReadOnlyProperty
     private LocalDateTime insertTime;

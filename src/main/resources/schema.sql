@@ -95,7 +95,6 @@ create table if not exists `invi_detail`
     id           char(19)   not null primary key,
     invi_id      char(19)   not null,
     user_id      char(19)   not null,
-    teacher_name varchar(6) not null,
     insert_time  datetime   not null default current_timestamp,
     update_time  datetime   not null default current_timestamp on update current_timestamp,
 

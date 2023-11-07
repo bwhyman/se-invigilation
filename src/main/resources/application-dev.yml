@@ -1,0 +1,38 @@
+spring:
+  config:
+    import: classpath:application-secret.yml  # application-secret.yml。短信访问与token生成密钥，git提交忽略
+  sql:
+    init:
+      mode: always
+  r2dbc:
+    url: 'r2dbcs:mysql://192.168.1.31:3306/se_invigilation'
+    username: root
+    password: a1213a
+    pool:
+      enabled: true
+      initial-size: 1
+      validation-query: select 1
+  codec:
+    max-in-memory-size: 2MB
+
+  jackson:
+    default-property-inclusion: non_null
+
+
+logging:
+  level:
+    root: info
+    com:
+      se: debug
+    org:
+      springframework:
+        r2dbc: debug
+  pattern:
+    console: '%-5level %C.%M[%line] - %msg%n'
+
+dingtalk:
+  appkey: ''
+  appsecret: ''
+  agentid: ''
+my:
+  secretkey: ''

@@ -90,7 +90,6 @@ public class SubjectService {
             InviDetail d = InviDetail.builder()
                     .inviId(inviid)
                     .userId(user.getId())
-                    .teacherName(user.getName())
                     .build();
             Mono<InviDetail> save = inviDetailRepository.save(d);
             monos.add(save);
@@ -112,7 +111,7 @@ public class SubjectService {
     }
 
     public Mono<List<User>> listInviDetailUsers(String inviid) {
-        return inviDetailRepository.findByInviId(inviid).collectList();
+        return userRepository.findByInviId(inviid).collectList();
     }
 
     @Transactional
