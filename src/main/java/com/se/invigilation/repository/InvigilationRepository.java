@@ -102,4 +102,10 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
             update invigilation i set i.remark=:remark where i.id in (:ids)
             """)
     Mono<Integer> updateRemarks(List<String> ids, String remark);
+
+    @Modifying
+    @Query("""
+            update invigilation iv set iv.amount=iv.amount-1 where iv.id=:id;
+            """)
+    Mono<Integer> updateAmount(String id);
 }

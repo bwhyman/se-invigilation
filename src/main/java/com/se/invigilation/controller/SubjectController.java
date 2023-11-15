@@ -112,7 +112,8 @@ public class SubjectController {
                                         notice.getStime(),
                                         notice.getEtime(),
                                         notice.getUnionIds(),
-                                        notice.getNoticeMessage())
+                                        notice.getNoticeMessage(),
+                                        notice.getRemindMinutes())
                                 .flatMap(eventId -> subjectService.updateInviCalanderId(
                                                 notice.getInviId(),
                                                 eventId, notice.getCreateUnionId(),

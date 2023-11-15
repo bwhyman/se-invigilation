@@ -91,18 +91,18 @@ public class CollegeService {
     @Transactional
     public Mono<Integer> addTimetable(String userid, List<Timetable> timetables) {
         return timetableRepository.deleteByUserId(userid).flatMap((r) ->
-            timetableRepository.saveAll(timetables).collectList()
-                    .thenReturn(1));
+                timetableRepository.saveAll(timetables).collectList()
+                        .thenReturn(1));
     }
 
     @Transactional
     public Mono<Integer> removeInvigilation(String inviid) {
         return inviDetailRepository.deleteByInviId(inviid).flatMap((r) ->
-            invigilationRepository.deleteById(inviid).thenReturn(1));
+                invigilationRepository.deleteById(inviid).thenReturn(1));
     }
 
     @Transactional
-    public Mono<Integer> updateInvigilation(Invigilation invigilation) {
+    public Mono<Integer> updateInvigilations(Invigilation invigilation) {
         return invigilationRepository.findById(invigilation.getId())
                 .flatMap((invi) -> {
                     invi.setAmount(invigilation.getAmount());
@@ -194,5 +194,16 @@ public class CollegeService {
 
     public Mono<Invigilation> getInvigilation(String collid, String inviid) {
         return invigilationRepository.findByCollId(collid, inviid);
+    }
+
+    @Transactional
+    public Mono<Integer> updateInvigilations(String oldInviid, Invigilation invi) {
+        return invigilationRepository.updateAmount(oldInviid)
+                .flatMap(r -> invigilationRepository.save(invi))
+                .thenReturn(1);
+    }
+
+    public Mono<User> getUser(String collid, String name) {
+        return userRepository.findByName(collid, name);
     }
 }

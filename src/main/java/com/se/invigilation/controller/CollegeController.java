@@ -112,7 +112,9 @@ public class CollegeController {
 
     // 手动添加一个监考
     @PostMapping("invigilation")
-    public Mono<ResultVO> postInvigilation(@RequestBody Invigilation invigilation) {
+    public Mono<ResultVO> postInvigilation(@RequestBody Invigilation invigilation,
+                                           @RequestAttribute(RequestConstant.COLLID) String collid) {
+        invigilation.setCollId(collid);
         return collegeService.addInvigilation(invigilation)
                 .thenReturn(ResultVO.success(Map.of()));
     }
@@ -133,13 +135,13 @@ public class CollegeController {
     @DeleteMapping("invigilations/{inviid}")
     public Mono<ResultVO> deleteInvigilation(@PathVariable String inviid) {
         return collegeService.removeInvigilation(inviid).
-        thenReturn(ResultVO.success(Map.of()));
+                thenReturn(ResultVO.success(Map.of()));
     }
 
     // 更新监考基本信息
     @PatchMapping("invigilations/edit")
     public Mono<ResultVO> patchInvigilation(@RequestBody Invigilation invigilation) {
-        return collegeService.updateInvigilation(invigilation)
+        return collegeService.updateInvigilations(invigilation)
                 .thenReturn(ResultVO.success(Map.of()));
     }
 
@@ -246,5 +248,24 @@ public class CollegeController {
                                         @RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.getInvigilation(collid, id).map((invi) ->
                 ResultVO.success(Map.of("invi", invi)));
+    }
+
+    // 剪裁监考。将指定监考人数减一，并复制一份独立的新监考。
+    @PostMapping("cutinvigilation/{oldInviid}")
+    public Mono<ResultVO> postInvigilation(@PathVariable String oldInviid,
+                                           @RequestBody Invigilation invi,
+                                           @RequestAttribute(RequestConstant.COLLID) String collid) {
+        invi.setCollId(collid);
+        return collegeService.updateInvigilations(oldInviid, invi)
+                .flatMap(r -> collegeService.listImporteds(collid)
+                        .map(invis -> ResultVO.success(Map.of("invis", invis))));
+    }
+
+    // 基于姓名获取用户
+    @GetMapping("users/{name}")
+    public Mono<ResultVO> getUser(@PathVariable String name,
+                                  @RequestAttribute(RequestConstant.COLLID) String collid) {
+        return collegeService.getUser(collid, name)
+                .map(user -> ResultVO.success(Map.of("user", user)));
     }
 }

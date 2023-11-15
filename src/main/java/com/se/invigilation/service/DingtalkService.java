@@ -96,7 +96,8 @@ public class DingtalkService {
                                     String stime,
                                     String etime,
                                     List<String> unionIds,
-                                    String message) {
+                                    String message,
+                                    int remindMinutes) {
         CreateEventHeaders createEventHeaders = new CreateEventHeaders();
         createEventHeaders.xAcsDingtalkAccessToken = dingtalkComponent.getDingtalkToken();
         List<CreateEventRequest.CreateEventRequestAttendees> list = new ArrayList<>();
@@ -107,7 +108,7 @@ public class DingtalkService {
         }
         CreateEventRequest.CreateEventRequestReminders reminders0 = new CreateEventRequest.CreateEventRequestReminders()
                 .setMethod("dingtalk")
-                .setMinutes(1440);
+                .setMinutes(remindMinutes);
         CreateEventRequest.CreateEventRequestReminders reminders1 = new CreateEventRequest.CreateEventRequestReminders()
                 .setMethod("dingtalk")
                 .setMinutes(120);

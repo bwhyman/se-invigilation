@@ -23,4 +23,5 @@ public class NoticeDTO {
     private String noticeUserIds;
     // dinguserids
     private String userIds;
+    private Integer remindMinutes;
 }

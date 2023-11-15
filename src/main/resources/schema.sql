@@ -27,7 +27,8 @@ create table if not exists `user`
     update_time   datetime    not null default current_timestamp on update current_timestamp,
 
     unique (account),
-    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin))
+    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin)),
+    index ((cast(department ->> '$.collId' as char(19)) collate utf8mb4_bin), name)
 );
 
 create table if not exists `department`

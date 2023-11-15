@@ -69,4 +69,11 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             where i.invi_id=:inviid and i.user_id=u.id group by u.id;
             """)
     Flux<User> findByInviId(String inviid);
+
+    @Query("""
+            select * from user u
+            where u.department ->> '$.collId'=:collid and u.name=:name
+            limit 1;
+            """)
+    Mono<User> findByName(String collid, String name);
 }
