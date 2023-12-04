@@ -203,7 +203,7 @@ public class CollegeService {
                 .thenReturn(1);
     }
 
-    public Mono<User> getUser(String collid, String name) {
-        return userRepository.findByName(collid, name);
+    public Mono<List<User>> getUser(String collid, String name) {
+        return userRepository.findByName(collid, name).collectList();
     }
 }

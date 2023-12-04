@@ -19,7 +19,7 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     @Query("""
             select * from invigilation i
             where i.coll_id=:collId and i.status=0
-            order by i.date
+            order by i.date, i.time ->> '$.starttime', i.insert_time
             """)
     Flux<Invigilation> findimporteds(String collId);
 

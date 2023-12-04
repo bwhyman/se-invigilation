@@ -72,8 +72,7 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
 
     @Query("""
             select * from user u
-            where u.department ->> '$.collId'=:collid and u.name=:name
-            limit 1;
+            where u.department ->> '$.collId'=:collid and u.name=:name;
             """)
-    Mono<User> findByName(String collid, String name);
+    Flux<User> findByName(String collid, String name);
 }

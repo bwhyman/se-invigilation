@@ -266,6 +266,13 @@ public class CollegeController {
     public Mono<ResultVO> getUser(@PathVariable String name,
                                   @RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.getUser(collid, name)
-                .map(user -> ResultVO.success(Map.of("user", user)));
+                .map(users -> ResultVO.success(Map.of("users", users)));
+    }
+
+    // 获取专业全部教师。用于学院直接分配的检索
+    @GetMapping("department/{depid}/users")
+    public Mono<ResultVO> getDepartmentUsers(@PathVariable String depid) {
+        return subjectService.listUsers(depid)
+                .map(users -> ResultVO.success(Map.of("users", users)));
     }
 }
