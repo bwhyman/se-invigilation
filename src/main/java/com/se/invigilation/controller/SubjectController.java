@@ -1,5 +1,6 @@
 package com.se.invigilation.controller;
 
+import com.se.invigilation.dox.ExcludeRule;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.AssignUserDTO;
 import com.se.invigilation.dto.NoticeDTO;
@@ -122,4 +123,42 @@ public class SubjectController {
                 );
     }
 
+    @GetMapping("comments")
+    public Mono<ResultVO> getComment(@RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.getDepartmentComment(depid)
+                .map(comment -> ResultVO.success(Map.of("comment", comment)));
+    }
+
+    // 专业添加如某教师周末不分配的监考备忘录
+    @PostMapping("comments")
+    public Mono<ResultVO> postComments(@RequestBody Map<String, String> comm,
+                                       @RequestAttribute(RequestConstant.DEPID) String depid) {
+
+        return subjectService.updateComment(depid, comm.get("comment"))
+                .thenReturn(ResultVO.success(Map.of()));
+    }
+
+    // 不排监考的排除规则
+    @PostMapping("excluderules")
+    public Mono<ResultVO> postExculdeRule(@RequestBody ExcludeRule rule,
+                                          @RequestAttribute(RequestConstant.DEPID) String depid) {
+        rule.setDepId(depid);
+        return subjectService.addExculdeRule(rule)
+                .flatMap(r -> subjectService.listExcludeRules(depid)
+                        .map(rules -> ResultVO.success(Map.of("rules", rules))));
+    }
+
+    @GetMapping("excluderules")
+    public Mono<ResultVO> getExculdeRules(@RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.listExcludeRules(depid)
+                .map(rules -> ResultVO.success(Map.of("rules", rules)));
+    }
+
+    @DeleteMapping("excluderules/{exid}")
+    public Mono<ResultVO> delExculdeRules(@PathVariable String exid,
+                                          @RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.removeExculdeRule(exid)
+                .flatMap(r -> subjectService.listExcludeRules(depid)
+                        .map(rules -> ResultVO.success(Map.of("rules", rules))));
+    }
 }

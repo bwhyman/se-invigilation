@@ -25,4 +25,12 @@ public interface DepartmentRepository extends ReactiveCrudRepository<Department,
     @Query("update department d set d.invi_status=:status where d.id=:depid")
     Mono<Integer> updateInviStatusById(String depid, int status);
 
+    @Modifying
+    @Query("""
+            update department d set d.comment=:comment where d.id=:depid;
+            """)
+    Mono<Integer> updateComment(String depid, String comment);
+
+    @Query("select d.comment from department d where d.id=:deipd;")
+    Mono<String> findCommentByDepid(String deipd);
 }

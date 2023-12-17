@@ -16,6 +16,7 @@ public interface InviDetailRepository extends ReactiveCrudRepository<InviDetail,
             on i.user_id=u.id
             where u.department ->> '$.depId'=:depid
             group by i.user_id
+            order by count desc
             """)
     Flux<InviCountDTO> findDepUserCounts(String depid);
 

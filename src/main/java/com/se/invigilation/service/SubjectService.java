@@ -1,15 +1,9 @@
 package com.se.invigilation.service;
 
-import com.se.invigilation.dox.InviDetail;
-import com.se.invigilation.dox.Invigilation;
-import com.se.invigilation.dox.Timetable;
-import com.se.invigilation.dox.User;
+import com.se.invigilation.dox.*;
 import com.se.invigilation.dto.AssignUserDTO;
 import com.se.invigilation.dto.InviCountDTO;
-import com.se.invigilation.repository.InviDetailRepository;
-import com.se.invigilation.repository.InvigilationRepository;
-import com.se.invigilation.repository.TimetableRepository;
-import com.se.invigilation.repository.UserRepository;
+import com.se.invigilation.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -31,8 +25,10 @@ import java.util.List;
 public class SubjectService {
     private final UserRepository userRepository;
     private final InvigilationRepository invigilationRepository;
+    private final DepartmentRepository departmentRepository;
     private final TimetableRepository timetableRepository;
     private final InviDetailRepository inviDetailRepository;
+    private final ExcludeRuleRepository excludeRuleRepository;
 
     //
     @Cacheable(value = "users", key = "{#depid}")
@@ -124,5 +120,24 @@ public class SubjectService {
     public Mono<String> updateInviCalanderNull(String inviid) {
         return invigilationRepository.updateCalanderNull(inviid).thenReturn(inviid);
     }
+    @Transactional
+    public Mono<Integer> updateComment(String depid, String comment) {
+        return departmentRepository.updateComment(depid, comment);
+    }
 
+    public Mono<String> getDepartmentComment(String depid) {
+        return departmentRepository.findCommentByDepid(depid);
+    }
+
+    public Mono<List<ExcludeRule>> listExcludeRules(String depid) {
+        return excludeRuleRepository.findByDepIdOrderByUserId(depid).collectList();
+    }
+
+    public Mono<Integer> addExculdeRule(ExcludeRule rule) {
+        return excludeRuleRepository.save(rule).thenReturn(1);
+    }
+    @Transactional
+    public Mono<Integer> removeExculdeRule(String rid) {
+        return excludeRuleRepository.deleteById(rid).thenReturn(1);
+    }
 }

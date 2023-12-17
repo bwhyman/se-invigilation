@@ -14,17 +14,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Data
 @Builder
-public class Department {
-    public static final int OPEN = 1;
-    public static final int CLOSED = 0;
+public class ExcludeRule {
     @Id
     @CreatedBy
     private String id;
-    private String name;
-    private String college;
-    private Integer inviStatus;
-    private String dingDepid;
-    private String comment;
+    private String depId;
+    private String userId;
+    private String teacherName;
+    private Integer startweek;
+    private Integer endweek;
+    private String dayweeks;
+    private String periods;
     @ReadOnlyProperty
     private LocalDateTime insertTime;
     @ReadOnlyProperty
