@@ -275,4 +275,9 @@ public class CollegeController {
         return subjectService.listUsers(depid)
                 .map(users -> ResultVO.success(Map.of("users", users)));
     }
+    @GetMapping("mobiles/{m}")
+    public Mono<ResultVO> getDingUser(@PathVariable String m) {
+        return dingtalkService.getDingUser(m)
+                .map(dingUser -> ResultVO.success(Map.of("dinguser", dingUser)));
+    }
 }

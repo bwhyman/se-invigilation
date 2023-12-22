@@ -11,8 +11,12 @@ import com.aliyun.teautil.models.RuntimeOptions;
 import com.dingtalk.api.DefaultDingTalkClient;
 import com.dingtalk.api.DingTalkClient;
 import com.dingtalk.api.request.OapiMessageCorpconversationAsyncsendV2Request;
+import com.dingtalk.api.request.OapiV2UserGetRequest;
+import com.dingtalk.api.request.OapiV2UserGetbymobileRequest;
 import com.dingtalk.api.request.OapiV2UserListRequest;
 import com.dingtalk.api.response.OapiMessageCorpconversationAsyncsendV2Response;
+import com.dingtalk.api.response.OapiV2UserGetResponse;
+import com.dingtalk.api.response.OapiV2UserGetbymobileResponse;
 import com.dingtalk.api.response.OapiV2UserListResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -215,5 +219,42 @@ public class DingtalkService {
         log.debug(rsp.getBody());
         DingUserListDTO dingUserListDTO = objectMapper.readValue(rsp.getBody(), DingUserListDTO.class);
         return dingUserListDTO.getResult();
+    }
+
+    // 基于钉钉手机号，查询用户userid/unionid
+    public Mono<DingUserListDTO.DingUser> getDingUser(String mobile) {
+        return getUserid(mobile)
+                .flatMap(this::getUnionid);
+    }
+
+    private Mono<String> getUserid(String mobile) {
+        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/v2/user/getbymobile");
+        OapiV2UserGetbymobileRequest req = new OapiV2UserGetbymobileRequest();
+        req.setMobile(mobile);
+        try {
+            OapiV2UserGetbymobileResponse rsp = client.execute(req, dingtalkComponent.getDingtalkToken());
+            if(!rsp.getErrmsg().equals("ok")) {
+                return Mono.error(XException.builder().codeN(400).message(rsp.getErrmsg()).build());
+            }
+            return Mono.just(rsp.getResult().getUserid());
+        } catch (ApiException e) {
+            return Mono.error(XException.builder().codeN(400).message(e.getMessage()).build());
+        }
+    }
+
+    private Mono<DingUserListDTO.DingUser> getUnionid(String userid) {
+        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/v2/user/get");
+        OapiV2UserGetRequest req = new OapiV2UserGetRequest();
+        req.setUserid(userid);
+        try {
+            OapiV2UserGetResponse rsp = client.execute(req, dingtalkComponent.getDingtalkToken());
+            return Mono.just(DingUserListDTO.DingUser.builder()
+                    .userid(userid)
+                    .unionid(rsp.getResult().getUnionid())
+                    .name(rsp.getResult().getName())
+                    .build());
+        } catch (ApiException e) {
+            return Mono.error(XException.builder().codeN(400).message(e.getMessage()).build());
+        }
     }
 }

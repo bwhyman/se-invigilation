@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class InviCountDTO {
     private String userId;
+    private String account;
     private Integer count;
     private String name;
+    private String departmentName;
 }
