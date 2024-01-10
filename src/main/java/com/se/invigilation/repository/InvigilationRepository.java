@@ -19,7 +19,7 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     @Query("""
             select * from invigilation i
             where i.coll_id=:collId and i.status=0
-            order by i.date, i.time ->> '$.starttime', i.course ->> '$.teacherName';
+            order by i.date, i.time ->> '$.starttime', i.course ->> '$.courseName', i.course ->> '$.teacherName';
             """)
     Flux<Invigilation> findimporteds(String collId);
 
@@ -32,7 +32,7 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     @Query("""
             select * from invigilation i
             where i.department ->> '$.depId'=:depId and i.status in (1,2)
-            order by i.date desc, i.time ->> '$.starttime', i.course ->> '$.teacherName'
+            order by i.date desc, i.time ->> '$.starttime', i.course ->> '$.courseName', i.course ->> '$.teacherName'
             limit :#{#pageable.offset}, :#{#pageable.pageSize}
             """)
     Flux<Invigilation> findDispatcheds(String depId, Pageable pageable);
@@ -46,7 +46,7 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     @Query("""
             select * from invigilation i
             where i.department ->> '$.depId'=:depId and i.status=:status
-            order by i.date desc, i.time ->> '$.starttime', i.course ->> '$.teacherName'
+            order by i.date desc, i.time ->> '$.starttime', i.course ->> '$.courseName', i.course ->> '$.teacherName'
             limit :#{#pageable.offset}, :#{#pageable.pageSize}
             """)
     Flux<Invigilation> findByDepIdAndStatus(String depId, int status, Pageable pageable);
@@ -93,7 +93,7 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     @Query("""
             select * from invigilation i
             where i.coll_id=:collid and i.date>=:sdate and i.date<=:edate
-            order by i.date, i.time ->> '$.starttime', i.course ->> '$.teacherName';
+            order by i.date, i.time ->> '$.starttime', i.course ->> '$.courseName', i.course ->> '$.teacherName';
             """)
     Flux<Invigilation> findByDate(String collid, String sdate, String edate);
 

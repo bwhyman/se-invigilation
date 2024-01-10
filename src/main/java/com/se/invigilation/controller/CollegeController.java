@@ -280,4 +280,10 @@ public class CollegeController {
         return dingtalkService.getDingUser(m)
                 .map(dingUser -> ResultVO.success(Map.of("dinguser", dingUser)));
     }
+
+    @DeleteMapping("users/{uid}")
+    public Mono<ResultVO> deleteUser(@PathVariable String uid) {
+        return collegeService.removeUser(uid)
+                .thenReturn(ResultVO.success(Map.of()));
+    }
 }

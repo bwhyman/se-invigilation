@@ -206,4 +206,8 @@ public class CollegeService {
     public Mono<List<User>> getUser(String collid, String name) {
         return userRepository.findByName(collid, name).collectList();
     }
+
+    public Mono<Integer> removeUser(String uid)  {
+        return userRepository.deleteById(uid).thenReturn(1);
+    }
 }
