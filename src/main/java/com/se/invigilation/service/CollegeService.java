@@ -210,4 +210,9 @@ public class CollegeService {
     public Mono<Integer> removeUser(String uid)  {
         return userRepository.deleteById(uid).thenReturn(1);
     }
+
+    @Transactional
+    public Mono<Integer> removeCollegeInvis(String collid) {
+        return invigilationRepository.deleteInvis(collid);
+    }
 }

@@ -286,4 +286,10 @@ public class CollegeController {
         return collegeService.removeUser(uid)
                 .thenReturn(ResultVO.success(Map.of()));
     }
+    // 基于学院ID移除监考详细分配信息，以及监考信息
+    @DeleteMapping("colleges/invis")
+    public Mono<ResultVO> deleteInvis(@RequestAttribute(RequestConstant.COLLID) String collid) {
+        return collegeService.removeCollegeInvis(collid)
+                .thenReturn(ResultVO.success(Map.of()));
+    }
 }

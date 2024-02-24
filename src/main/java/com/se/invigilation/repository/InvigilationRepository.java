@@ -108,4 +108,12 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
             update invigilation iv set iv.amount=iv.amount-1 where iv.id=:id;
             """)
     Mono<Integer> updateAmount(String id);
+
+    @Modifying
+    @Query("""
+            delete i, ide from invigilation i left join invi_detail ide
+            on i.id=ide.invi_id
+            where i.coll_id=:collid
+            """)
+    Mono<Integer> deleteInvis(String collid);
 }
