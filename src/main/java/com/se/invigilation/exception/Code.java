@@ -10,7 +10,7 @@ public enum Code {
     TOKEN_EXPIRED(403, "过期请重新登录"),
     FORBIDDEN(403, "无权限"),
     MESSAGE_ERROR(405, "短信发送错误");
-
+    public static final int ERROR = 400;
     private final int code;
     private final String message;
 

@@ -16,16 +16,16 @@ public class ExceptionController {
     // filter内无效，单独处理。
     @ExceptionHandler(XException.class)
     public Mono<ResultVO> handleXException(Exception exception) {
-        return Mono.just(ResultVO.error(Code.BAD_REQUEST.getCode(), exception.getMessage()));
+        return Mono.just(ResultVO.error(Code.ERROR, exception.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public Mono<ResultVO> handleException(Exception exception) {
-        return Mono.just(ResultVO.error(Code.BAD_REQUEST.getCode(), exception.getMessage()));
+        return Mono.just(ResultVO.error(Code.ERROR, exception.getMessage()));
     }
 
     @ExceptionHandler(UncategorizedR2dbcException.class)
     public Mono<ResultVO> handelUncategorizedR2dbcException(UncategorizedR2dbcException exception) {
-        return Mono.just(ResultVO.error(Code.BAD_REQUEST.getCode(), "唯一约束冲突！" + exception.getMessage()));
+        return Mono.just(ResultVO.error(Code.ERROR, "唯一约束冲突！" + exception.getMessage()));
     }
 }

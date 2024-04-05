@@ -38,7 +38,7 @@ public class AdminController {
     @PostMapping("users")
     public Mono<ResultVO> postDepartments(@RequestBody UserDTO userDTO) {
 
-        return adminService.addUsers(userDTO.getCollId(), userDTO.getCollegeName(), userDTO.getUsers()).map(us -> ResultVO.success(Map.of()));
+        return adminService.addUsers(userDTO.getCollId(), userDTO.getCollegeName(), userDTO.getUsers()).map(us -> ResultVO.ok());
     }
 
     //

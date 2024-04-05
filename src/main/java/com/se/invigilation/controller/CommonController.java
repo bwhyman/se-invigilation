@@ -61,7 +61,7 @@ public class CommonController {
     public Mono<ResultVO> postPassword(@RequestBody User user,
                                        @RequestAttribute(RequestConstant.UID) String uid) {
         return commonService.updatePassword(uid, user.getPassword()).
-                thenReturn(ResultVO.success(Map.of()));
+                thenReturn(ResultVO.ok());
     }
 
     @GetMapping("users/{account}")
@@ -81,6 +81,6 @@ public class CommonController {
     @DeleteMapping("invinotices/{inviid}")
     public Mono<ResultVO> deleteInvigilation(@PathVariable String inviid) {
         return dingtalkService.cancel(inviid).
-                thenReturn(ResultVO.success(Map.of()));
+                thenReturn(ResultVO.ok());
     }
 }

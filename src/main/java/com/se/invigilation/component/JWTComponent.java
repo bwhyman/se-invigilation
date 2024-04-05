@@ -8,6 +8,7 @@ import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.se.invigilation.exception.Code;
 import com.se.invigilation.exception.XException;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,18 +25,23 @@ public class JWTComponent {
     // 私钥
     @Value("${my.secretkey}")
     private String secretkey;
+    private Algorithm algorithm;
+    @PostConstruct
+    private void init() {
+        algorithm = Algorithm.HMAC256(secretkey);
+    }
     public String encode(Map<String, Object> map) {
         LocalDateTime time = LocalDateTime.now().plusMonths(12);
         return JWT.create()
                 .withPayload(map)
                 .withIssuedAt(new Date())
                 .withExpiresAt(Date.from(time.atZone(ZoneId.systemDefault()).toInstant()))
-                .sign(Algorithm.HMAC256(secretkey));
+                .sign(algorithm);
     }
 
     public Mono<DecodedJWT> decode(String token) {
         try {
-            DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC256(secretkey)).build().verify(token);
+            DecodedJWT decodedJWT = JWT.require(algorithm).build().verify(token);
             return Mono.just(decodedJWT);
         } catch (TokenExpiredException | SignatureVerificationException | JWTDecodeException e) {
             Code code = Code.FORBIDDEN;

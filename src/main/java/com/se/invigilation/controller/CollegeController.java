@@ -37,7 +37,7 @@ public class CollegeController {
     @PostMapping("invigilations")
     public Mono<ResultVO> postInvigilations(@RequestBody List<Invigilation> invigilations) {
         return collegeService.addInvigilations(invigilations)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 获取开放状态部门
@@ -72,8 +72,8 @@ public class CollegeController {
     // 更新监考状态为下发状态
     @PatchMapping("invigilations/dispatch")
     public Mono<ResultVO> patchInvigilations(@RequestBody List<Invigilation> invigilations) {
-        return collegeService.updateDispatcher(invigilations).map((r) ->
-                ResultVO.success(Map.of()));
+        return collegeService.updateDispatcher(invigilations)
+                .thenReturn(ResultVO.ok());
     }
 
     // 获取全学院教师
@@ -92,7 +92,7 @@ public class CollegeController {
         }
         return collegeService.removeCollegeTimetables(collid)
                 .flatMap(r -> collegeService.addTimetables(timetables))
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 获取指定部门监考分配教师
@@ -116,7 +116,7 @@ public class CollegeController {
                                            @RequestAttribute(RequestConstant.COLLID) String collid) {
         invigilation.setCollId(collid);
         return collegeService.addInvigilation(invigilation)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 导入单教师课表
@@ -128,28 +128,28 @@ public class CollegeController {
             tb.setCollId(collid);
         }
         return collegeService.addTimetable(userid, timetables)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 删除监考详细信息，删除监考信息
     @DeleteMapping("invigilations/{inviid}")
     public Mono<ResultVO> deleteInvigilation(@PathVariable String inviid) {
         return collegeService.removeInvigilation(inviid).
-                thenReturn(ResultVO.success(Map.of()));
+                thenReturn(ResultVO.ok());
     }
 
     // 更新监考基本信息
     @PatchMapping("invigilations/edit")
     public Mono<ResultVO> patchInvigilation(@RequestBody Invigilation invigilation) {
         return collegeService.updateInvigilations(invigilation)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 重置监考至导入状态
     @PutMapping("invigilations/{inviid}/status")
     public Mono<ResultVO> putInvigilationStatus(@PathVariable String inviid) {
         return collegeService.resetInvigilation(inviid)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 更新部门监考状态
@@ -179,15 +179,15 @@ public class CollegeController {
     @PostMapping("assigns/invis/{inviid}")
     public Mono<ResultVO> postAssigns(@PathVariable String inviid, @RequestBody AssignUserDTO assignUser) {
         return subjectService.updateInviCalanderNull(inviid).flatMap((r) ->
-                subjectService.addInvidetails(inviid, assignUser).map((re) ->
-                        ResultVO.success(Map.of())));
+                subjectService.addInvidetails(inviid, assignUser)
+                        .thenReturn(ResultVO.ok());
     }
 
     // 修改指定账号角色
     @PostMapping("roles")
     public Mono<ResultVO> postRole(@RequestBody User user) {
         return collegeService.updateRole(user.getId(), user.getRole())
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 获取全部监考信息
@@ -207,14 +207,14 @@ public class CollegeController {
     @PostMapping("departments/updateuser")
     public Mono<ResultVO> postDepartment(@RequestBody User user) {
         return collegeService.updateUserDepartment(user.getId(), user.getDepartment())
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 重置密码
     @PutMapping("passwords/{account}")
     public Mono<ResultVO> putPassword(@PathVariable String account) {
         return collegeService.updatePassword(account)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 手动添加包含钉钉2个账号的用户
@@ -222,7 +222,7 @@ public class CollegeController {
     public Mono<ResultVO> postUser(@RequestBody User user) {
         user.setPassword(passwordEncoder.encode(user.getAccount()));
         return collegeService.addUser(user)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 加载指定日期内全部监考
@@ -284,12 +284,12 @@ public class CollegeController {
     @DeleteMapping("users/{uid}")
     public Mono<ResultVO> deleteUser(@PathVariable String uid) {
         return collegeService.removeUser(uid)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
     // 基于学院ID移除监考详细分配信息，以及监考信息
     @DeleteMapping("colleges/invis")
     public Mono<ResultVO> deleteInvis(@RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.removeCollegeInvis(collid)
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 }

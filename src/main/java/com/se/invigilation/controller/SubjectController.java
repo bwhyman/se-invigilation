@@ -53,7 +53,8 @@ public class SubjectController {
     // 更新教师监考状态
     @PostMapping("invistatus")
     public Mono<ResultVO> postInviStatus(@RequestBody List<User> users) {
-        return subjectService.updateUserInviStatus(users).thenReturn(ResultVO.success(Map.of()));
+        return subjectService.updateUserInviStatus(users)
+                .thenReturn(ResultVO.ok());
     }
 
     @GetMapping("invis/{id}")
@@ -92,8 +93,8 @@ public class SubjectController {
     public Mono<ResultVO> postInviDetails(@PathVariable String inviid,
                                           @RequestBody AssignUserDTO assignUser) {
         return subjectService.updateInviCalanderNull(inviid).flatMap((r) ->
-                subjectService.addInvidetails(inviid, assignUser).map((re) ->
-                        ResultVO.success(Map.of())));
+                subjectService.addInvidetails(inviid, assignUser)
+                        .thenReturn(ResultVO.ok());
     }
 
     // 获取指定监考教师信息，及钉钉信息
@@ -135,7 +136,7 @@ public class SubjectController {
                                        @RequestAttribute(RequestConstant.DEPID) String depid) {
 
         return subjectService.updateComment(depid, comm.get("comment"))
-                .thenReturn(ResultVO.success(Map.of()));
+                .thenReturn(ResultVO.ok());
     }
 
     // 不排监考的排除规则
