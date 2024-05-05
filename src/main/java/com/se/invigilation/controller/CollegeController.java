@@ -180,7 +180,7 @@ public class CollegeController {
     public Mono<ResultVO> postAssigns(@PathVariable String inviid, @RequestBody AssignUserDTO assignUser) {
         return subjectService.updateInviCalanderNull(inviid).flatMap((r) ->
                 subjectService.addInvidetails(inviid, assignUser)
-                        .thenReturn(ResultVO.ok());
+                        .thenReturn(ResultVO.ok()));
     }
 
     // 修改指定账号角色

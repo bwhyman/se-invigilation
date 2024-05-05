@@ -94,7 +94,7 @@ public class SubjectController {
                                           @RequestBody AssignUserDTO assignUser) {
         return subjectService.updateInviCalanderNull(inviid).flatMap((r) ->
                 subjectService.addInvidetails(inviid, assignUser)
-                        .thenReturn(ResultVO.ok());
+                        .thenReturn(ResultVO.ok()));
     }
 
     // 获取指定监考教师信息，及钉钉信息
