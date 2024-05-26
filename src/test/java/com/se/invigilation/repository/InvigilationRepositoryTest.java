@@ -8,8 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @Slf4j
 class InvigilationRepositoryTest {
@@ -19,7 +17,7 @@ class InvigilationRepositoryTest {
     @Test
     void findDispatcheds() {
         Pageable pageable = PageRequest.of(0, RequestConstant.pageSize);
-        invigilationRepository.findDispatcheds("1154987556667285504", pageable)
+        invigilationRepository.findDispatcheds("1154987556667285504", "1154814591036186624", pageable)
                 .collectList()
                 .block()
                 .forEach(System.out::println);

@@ -31,9 +31,9 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
     Mono<Integer> updatePasswordById(String uid, String password);
 
     @Query("""
-            select * from user u where u.department ->> '$.depId'=:depid and u.role=:role;
+            select * from user u where u.department ->> '$.depId'=:depid and u.department ->> '$.collId'=:collid and u.role=:role;
             """)
-    Flux<User> findByDepidAndrole(String depid, String role);
+    Flux<User> findByDepidAndrole(String depid, String collid, String role);
 
     @Query("""
             select * from user u where u.department ->> '$.depId'=:depid and u.name=:name;
@@ -42,21 +42,21 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
 
     @Modifying
     @Query("""
-            update user u set u.role=:role where u.id=:uid;
+            update user u set u.role=:role where u.id=:uid and u.department ->> '$.collId'=:collid;
             """)
-    Mono<Integer> updateRole(String uid, String role);
+    Mono<Integer> updateRole(String uid, String role, String collid);
 
     @Modifying
     @Query("""
-            update user u set u.department=:depart where u.id=:uid
+            update user u set u.department=:depart where u.id=:uid and u.department ->> '$.collId'=:collid;
             """)
-    Mono<Integer> updateDepartment(String uid, String depart);
+    Mono<Integer> updateDepartment(String uid, String collid, String depart);
 
     @Modifying
     @Query("""
-            update user u set u.password=:password where u.account=:account;
+            update user u set u.password=:password where u.account=:account and u.department ->> '$.collId'=:collid;
             """)
-    Mono<Integer> updatePassword(String account, String password);
+    Mono<Integer> updatePassword(String account, String collid, String password);
 
     @Query("""
             select u.ding_user_id, u.ding_union_id,u.id from user u where u.id in (:ids) group by u.id;
@@ -75,4 +75,10 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             where u.department ->> '$.collId'=:collid and u.name=:name;
             """)
     Flux<User> findByName(String collid, String name);
+
+    @Modifying
+    @Query("""
+            delete from user u where u.id=:id and u.department ->> '$.collId'=:collid;
+            """)
+    Mono<Integer> deleteById(String uid, String collid);
 }

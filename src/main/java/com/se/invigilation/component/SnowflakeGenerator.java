@@ -14,13 +14,18 @@ import java.util.Enumeration;
 @Configuration
 @EnableR2dbcAuditing
 public class SnowflakeGenerator {
+
     @Bean
-    public ReactiveAuditorAware<String> auditorAware() {
-        Snowflake s = new Snowflake();
-        return () -> Mono.just(String.valueOf(s.nextId()));
+    public Snowflake snowflake() {
+        return new Snowflake();
     }
 
-    private static class Snowflake {
+    @Bean
+    public ReactiveAuditorAware<String> auditorAware(Snowflake snowflake) {
+        return () -> Mono.just(String.valueOf(snowflake.nextId()));
+    }
+
+    public static class Snowflake {
         private static final int UNUSED_BITS = 1; // Sign bit, Unused (always set to 0)
         private static final int EPOCH_BITS = 41;
         private static final int NODE_ID_BITS = 10;

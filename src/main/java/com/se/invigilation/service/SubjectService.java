@@ -4,11 +4,13 @@ import com.se.invigilation.dox.*;
 import com.se.invigilation.dto.AssignUserDTO;
 import com.se.invigilation.dto.InviCountDTO;
 import com.se.invigilation.repository.*;
+import io.r2dbc.spi.Statement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -29,6 +31,7 @@ public class SubjectService {
     private final TimetableRepository timetableRepository;
     private final InviDetailRepository inviDetailRepository;
     private final ExcludeRuleRepository excludeRuleRepository;
+    private final DatabaseClient databaseClient;
 
     //
     @Cacheable(value = "users", key = "{#depid}")
@@ -45,16 +48,25 @@ public class SubjectService {
         return invigilationRepository.findTotalByByDepIdAndStatus(depid, status);
     }
 
-    //
     @Transactional
     @CacheEvict(value = "users", allEntries = true)
-    public Mono<List<Integer>> updateUserInviStatus(List<User> users) {
-        List<Mono<Integer>> monos = new ArrayList<>();
-        for (User user : users) {
-            Mono<Integer> integerMono = invigilationRepository.updateInviStatus(user.getId(), user.getInviStatus());
-            monos.add(integerMono);
-        }
-        return Flux.merge(monos).collectList();
+    public Mono<Void> updateUserInviStatus(List<User> users, String depid) {
+        var sql = "update user u set u.invi_status=? where u.id=? and u.department ->> '$.depId'=?";
+        return databaseClient
+                .inConnection(conn -> {
+                    Statement statement = conn.createStatement(sql);
+                    for (int i = 0; i < users.size(); i++) {
+                        statement.bind(0, users.get(i).getInviStatus())
+                                .bind(1, users.get(i).getId())
+                                .bind(2, depid);
+                        // 最后一次不能调用add()方法
+                        if (i < users.size() - 1) {
+                            statement.add();
+                        }
+                    }
+                    // 必须使用Flux聚合
+                    return Flux.from(statement.execute()).collectList();
+                }).then();
     }
 
     public Mono<Invigilation> getInvigilation(String depId, String inviid) {
@@ -120,6 +132,7 @@ public class SubjectService {
     public Mono<String> updateInviCalanderNull(String inviid) {
         return invigilationRepository.updateCalanderNull(inviid).thenReturn(inviid);
     }
+
     @Transactional
     public Mono<Integer> updateComment(String depid, String comment) {
         return departmentRepository.updateComment(depid, comment);
@@ -136,6 +149,7 @@ public class SubjectService {
     public Mono<Integer> addExculdeRule(ExcludeRule rule) {
         return excludeRuleRepository.save(rule).thenReturn(1);
     }
+
     @Transactional
     public Mono<Integer> removeExculdeRule(String rid) {
         return excludeRuleRepository.deleteById(rid).thenReturn(1);

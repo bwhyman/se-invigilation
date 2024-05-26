@@ -36,8 +36,9 @@ public class SubjectController {
 
     // 获取指定状态，指定页，监考
     @GetMapping("invis/status/{status}/{page}")
-    public Mono<ResultVO> getInvis(@RequestAttribute(RequestConstant.DEPID) String depid,
-                                   @PathVariable int status, @PathVariable int page) {
+    public Mono<ResultVO> getInvis(@PathVariable int status,
+                                   @PathVariable int page,
+                                   @RequestAttribute(RequestConstant.DEPID) String depid) {
         Pageable pageable = PageRequest.of(page - 1, RequestConstant.pageSize);
         return subjectService.listInvigilations(depid, status, pageable).map((invis) ->
                 ResultVO.success(Map.of("invis", invis)));
@@ -45,15 +46,17 @@ public class SubjectController {
 
     // 获取指定状态监考数量
     @GetMapping("/invis/status/{status}/total")
-    public Mono<ResultVO> getInvisStatusTotal(@RequestAttribute(RequestConstant.DEPID) String depid, @PathVariable int status) {
+    public Mono<ResultVO> getInvisStatusTotal(@PathVariable int status,
+                                              @RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.getInvisTotal(depid, status).map((total) ->
                 ResultVO.success(Map.of("total", total)));
     }
 
     // 更新教师监考状态
     @PostMapping("invistatus")
-    public Mono<ResultVO> postInviStatus(@RequestBody List<User> users) {
-        return subjectService.updateUserInviStatus(users)
+    public Mono<ResultVO> postInviStatus(@RequestBody List<User> users,
+                                         @RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.updateUserInviStatus(users, depid)
                 .thenReturn(ResultVO.ok());
     }
 
@@ -82,8 +85,8 @@ public class SubjectController {
 
     // 获取指定日期全部监考
     @GetMapping("invis/dates/{date}")
-    public Mono<ResultVO> getDateInvis(@RequestAttribute(RequestConstant.DEPID) String depid,
-                                       @PathVariable LocalDate date) {
+    public Mono<ResultVO> getDateInvis(@PathVariable LocalDate date,
+                                       @RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.listInvigilations(depid, date).map((invigilations) ->
                 ResultVO.success(Map.of("invis", invigilations)));
     }

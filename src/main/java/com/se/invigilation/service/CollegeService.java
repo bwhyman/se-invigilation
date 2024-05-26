@@ -1,14 +1,17 @@
 package com.se.invigilation.service;
 
+import com.se.invigilation.component.SnowflakeGenerator;
 import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.InviCountDTO;
 import com.se.invigilation.repository.*;
+import io.r2dbc.spi.Statement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,8 @@ public class CollegeService {
     private final UserRepository userRepository;
     private final TimetableRepository timetableRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DatabaseClient databaseClient;
+    private final SnowflakeGenerator.Snowflake snowflake;
 
     @Transactional
     public Mono<Void> addInvigilations(List<Invigilation> invigilations) {
@@ -51,26 +56,21 @@ public class CollegeService {
         return invigilationRepository.findimporteds(collid).collectList();
     }
 
-    public Mono<Integer> getdispatchedTotal(String depid) {
-        return invigilationRepository.findDispatchedTotal(depid);
+    public Mono<Integer> getdispatchedTotal(String depid, String collid) {
+        return invigilationRepository.findDispatchedTotal(depid, collid);
     }
 
-    public Mono<List<Invigilation>> listDispatchedInvis(String depid, Pageable pageable) {
-        return invigilationRepository.findDispatcheds(depid, pageable).collectList();
+    public Mono<List<Invigilation>> listDispatchedInvis(String depid, String collid, Pageable pageable) {
+        return invigilationRepository.findDispatcheds(depid, collid, pageable).collectList();
     }
 
     @Transactional
-    public Mono<List<Integer>> updateDispatcher(List<Invigilation> invigilations) {
+    public Mono<List<Integer>> updateDispatcher(List<Invigilation> invigilations, String collid) {
         List<Mono<Integer>> monos = new ArrayList<>();
-        for (Invigilation invigilation : invigilations) {
-            Mono<Integer> update = invigilationRepository.findById(invigilation.getId())
-                    .flatMap((invi) -> {
-                        invi.setDepartment(invigilation.getDepartment());
-                        invi.setStatus(Invigilation.DISPATCH);
-                        invi.setDispatcher(invigilation.getDispatcher());
-                        return invigilationRepository.save(invi).thenReturn(1);
-                    });
-            monos.add(update);
+        for (Invigilation invi : invigilations) {
+            invi.setStatus(Invigilation.DISPATCH);
+            Mono<Integer> integerMono = invigilationRepository.updateInvi(invi, collid);
+            monos.add(integerMono);
         }
         return Flux.merge(monos).collectList();
     }
@@ -80,12 +80,37 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Void> addTimetables(List<Timetable> timetables) {
-        return timetableRepository.saveAll(timetables).then();
+    public Mono<Void> addTimetables(List<Timetable> timetables, String collid) {
+        var sql = """
+                insert into timetable
+                (id, coll_id, startweek, endweek, dayweek, period, course, user_id, teacher_name)
+                values(?,?,?,?,?,?,?,?,?)
+                """;
+        return timetableRepository.deleteByCollId(collid)
+                .flatMap(r -> databaseClient.inConnection(conn -> {
+                    Statement statement = conn.createStatement(sql);
+                    for (int i = 0; i < timetables.size(); i++) {
+                        var tb = timetables.get(i);
+                        statement.bind(0, snowflake.nextId())
+                                .bind(1, collid)
+                                .bind(2, tb.getStartweek())
+                                .bind(3, tb.getEndweek())
+                                .bind(4, tb.getDayweek())
+                                .bind(5, tb.getPeriod())
+                                .bind(6, tb.getCourse())
+                                .bind(7, tb.getUserId())
+                                .bind(8, tb.getTeacherName());
+                        // 最后一次不能调用add()方法
+                        if (i < timetables.size() - 1) {
+                            statement.add();
+                        }
+                    }
+                    return Flux.from(statement.execute()).collectList();
+                })).then();
     }
 
-    public Mono<List<User>> listUsers(String depid, String role) {
-        return userRepository.findByDepidAndrole(depid, role).collectList();
+    public Mono<List<User>> listUsers(String depid, String collid, String role) {
+        return userRepository.findByDepidAndrole(depid, collid, role).collectList();
     }
 
     @Transactional
@@ -96,9 +121,8 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> removeInvigilation(String inviid) {
-        return inviDetailRepository.deleteByInviId(inviid).flatMap((r) ->
-                invigilationRepository.deleteById(inviid).thenReturn(1));
+    public Mono<Integer> removeInvigilation(String inviid, String collid) {
+        return invigilationRepository.deleteInvi(inviid, collid);
     }
 
     @Transactional
@@ -147,8 +171,8 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> updateRole(String uid, String role) {
-        return userRepository.updateRole(uid, role);
+    public Mono<Integer> updateRole(String uid, String role, String collid) {
+        return userRepository.updateRole(uid, role, collid);
     }
 
     public Mono<List<Invigilation>> listInvis(String collid) {
@@ -162,19 +186,13 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> updateUserDepartment(String uid, String depart) {
-        return userRepository.updateDepartment(uid, depart);
+    public Mono<Integer> updateUserDepartment(String uid, String collid, String depart) {
+        return userRepository.updateDepartment(uid, collid, depart);
     }
 
     @Transactional
-    public Mono<Integer> updatePassword(String account) {
-        return userRepository.updatePassword(account, passwordEncoder.encode(account))
-                .thenReturn(1);
-    }
-
-    @Transactional
-    public Mono<Integer> removeCollegeTimetables(String collid) {
-        return timetableRepository.deleteByCollId(collid);
+    public Mono<Integer> updatePassword(String account, String collid) {
+        return userRepository.updatePassword(account, collid, passwordEncoder.encode(account));
     }
 
     @Transactional
@@ -207,12 +225,14 @@ public class CollegeService {
         return userRepository.findByName(collid, name).collectList();
     }
 
-    public Mono<Integer> removeUser(String uid)  {
-        return userRepository.deleteById(uid).thenReturn(1);
+    public Mono<Integer> removeUser(String uid, String collid) {
+        return userRepository.deleteById(uid, collid).thenReturn(1);
     }
 
     @Transactional
-    public Mono<Integer> removeCollegeInvis(String collid) {
-        return invigilationRepository.deleteInvis(collid);
+    public Mono<Void> removeCollegeData(String collid) {
+        Mono<Integer> inviM = invigilationRepository.deleteInvis(collid);
+        Mono<Integer> timetableM = timetableRepository.deleteByCollId(collid);
+        return Mono.when(inviM, timetableM);
     }
 }

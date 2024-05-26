@@ -3,6 +3,7 @@ package com.se.invigilation.service;
 import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
+import com.se.invigilation.exception.Code;
 import com.se.invigilation.exception.XException;
 import com.se.invigilation.repository.DepartmentRepository;
 import com.se.invigilation.repository.SettingRepository;
@@ -45,7 +46,7 @@ public class AdminService {
         return departmentRepository.findByName(department.getName())
                 .filter(dep -> {
                     throw XException.builder()
-                            .codeN(400)
+                            .codeN(Code.ERROR)
                             .message(department.getName() + "已存在")
                             .build();
                 })
