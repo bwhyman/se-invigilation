@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.ReadOnlyProperty;
-import org.springframework.data.relational.core.mapping.Column;
 
 import java.time.LocalDateTime;
 
@@ -20,9 +19,7 @@ public class Setting {
     @CreatedBy
     private String id;
     private String name;
-    @Column("`key`")
     private String key;
-    @Column("`value`")
     private String value;
 
     @ReadOnlyProperty
