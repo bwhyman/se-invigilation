@@ -33,4 +33,8 @@ public interface DepartmentRepository extends ReactiveCrudRepository<Department,
 
     @Query("select d.comment from department d where d.id=:deipd;")
     Mono<String> findCommentByDepid(String deipd);
+
+    @Modifying
+    @Query("update department d set d.name=:name where d.id=:depId and d.college ->> '$.collId'=:collId")
+    Mono<Integer> updateName(String depId, String collId, String name);
 }

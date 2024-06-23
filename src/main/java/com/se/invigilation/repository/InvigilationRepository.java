@@ -134,4 +134,11 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
             where i.coll_id=:collid and i.id=:inviid
             """)
     Mono<Integer> deleteInvi(String inviid, String collid);
+
+    @Modifying
+    @Query("""
+            update invigilation i set i.department=json_set(i.department, '$.departmentName', :name)
+            where i.department ->> '$.depId'=:depId and i.coll_id=:collId
+            """)
+    Mono<Integer> updateDepartmentName(String depId, String collId, String name);
 }

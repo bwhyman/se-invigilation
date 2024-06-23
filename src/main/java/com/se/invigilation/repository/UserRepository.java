@@ -54,6 +54,13 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
 
     @Modifying
     @Query("""
+            update user u set u.department=json_set(u.department, '$.departmentName', :name)
+            where u.department ->> '$.depId'=:depid and u.department ->> '$.collId'=:collid;
+            """)
+    Mono<Integer> updateUsersDepartment(String depid, String collid, String name);
+
+    @Modifying
+    @Query("""
             update user u set u.password=:password where u.account=:account and u.department ->> '$.collId'=:collid;
             """)
     Mono<Integer> updatePassword(String account, String collid, String password);

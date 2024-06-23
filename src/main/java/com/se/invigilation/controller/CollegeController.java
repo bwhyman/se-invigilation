@@ -5,9 +5,11 @@ import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.AssignUserDTO;
+import com.se.invigilation.dto.DepartmentDTO;
 import com.se.invigilation.dto.NoticeDTO;
 import com.se.invigilation.dto.NoticeRemarkDTO;
 import com.se.invigilation.exception.Code;
+import com.se.invigilation.exception.XException;
 import com.se.invigilation.service.CollegeService;
 import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.service.SubjectService;
@@ -82,7 +84,8 @@ public class CollegeController {
     public Mono<ResultVO> patchInvigilations(@RequestBody List<Invigilation> invigilations,
                                              @RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.updateDispatcher(invigilations, collid)
-                .thenReturn(ResultVO.ok());
+                .flatMap(r -> collegeService.listImporteds(collid).map((invis) ->
+                        ResultVO.success(Map.of("invis", invis))));
     }
 
     // 获取全学院教师
@@ -215,6 +218,7 @@ public class CollegeController {
                 .map(counts -> ResultVO.success(Map.of("counts", counts)));
     }
 
+    // 更新教师部门
     @PostMapping("departments/updateuser")
     public Mono<ResultVO> postDepartment(@RequestBody User user,
                                          @RequestAttribute(RequestConstant.COLLID) String collid) {
@@ -308,5 +312,29 @@ public class CollegeController {
     public Mono<ResultVO> deleteInvis(@RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.removeCollegeData(collid)
                 .thenReturn(ResultVO.ok());
+    }
+
+    // 移除部门
+    @DeleteMapping("departments/{depid}")
+    public Mono<ResultVO> deleteDepartment(@PathVariable String depid,
+                                           @RequestAttribute(RequestConstant.COLLID) String collid) {
+        return subjectService.listUsers(depid).flatMap(users -> {
+            if (!users.isEmpty()) {
+                return Mono.error(XException.builder().codeN(Code.ERROR).message("禁止移除用户非空部门").build());
+            }
+            return collegeService.removeDepartment(depid, collid)
+                    .flatMap(r -> collegeService.listDepartments(collid)
+                            .map(departments -> ResultVO.success(Map.of("departments", departments))));
+        });
+    }
+
+    @PatchMapping("departments/{depid}")
+    public Mono<ResultVO> patchDepartment(@PathVariable String depid,
+                                          @RequestBody DepartmentDTO depart,
+                                          @RequestAttribute(RequestConstant.COLLID) String collid) {
+
+        return collegeService.updateDetparmentName(depid, collid, depart.getDepartmentName())
+                .flatMap(r -> collegeService.listDepartments(collid)
+                        .map(departments -> ResultVO.success(Map.of("departments", departments))));
     }
 }

@@ -5,6 +5,7 @@ import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
 import com.se.invigilation.dox.User;
+import com.se.invigilation.dto.DepartmentDTO;
 import com.se.invigilation.dto.InviCountDTO;
 import com.se.invigilation.repository.*;
 import io.r2dbc.spi.Statement;
@@ -234,5 +235,18 @@ public class CollegeService {
         Mono<Integer> inviM = invigilationRepository.deleteInvis(collid);
         Mono<Integer> timetableM = timetableRepository.deleteByCollId(collid);
         return Mono.when(inviM, timetableM);
+    }
+
+    @Transactional
+    public Mono<Integer> removeDepartment(String did, String collid) {
+        return departmentRepository.deleteById(did).thenReturn(1);
+    }
+
+    @Transactional
+    public Mono<Integer> updateDetparmentName(String depId, String collId, String name) {
+        Mono<Integer> dM = departmentRepository.updateName(depId, collId, name);
+        Mono<Integer> uM = userRepository.updateUsersDepartment(depId, collId, name);
+        Mono<Integer> inviM = invigilationRepository.updateDepartmentName(depId, collId, name);
+        return Mono.when(dM, uM, inviM).thenReturn(1);
     }
 }
