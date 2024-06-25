@@ -90,6 +90,11 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
             """)
     Mono<Integer> updateCalanderNull(String inviid);
 
+    @Query("""
+            select * from invigilation i
+            where i.coll_id=:collId
+            order by i.date
+            """)
     Flux<Invigilation> findByCollId(String collId);
 
     @Query("""
