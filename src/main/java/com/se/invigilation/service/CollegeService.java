@@ -127,16 +127,14 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> updateInvigilations(Invigilation invigilation) {
+    public Mono<Invigilation> updateInvigilations(Invigilation invigilation) {
         return invigilationRepository.findById(invigilation.getId())
                 .flatMap((invi) -> {
                     invi.setAmount(invigilation.getAmount());
                     invi.setDate(invigilation.getDate());
                     invi.setTime(invigilation.getTime());
                     invi.setCourse(invigilation.getCourse());
-                    invi.setStatus(invigilation.getStatus());
-                    return invigilationRepository.save(invi)
-                            .thenReturn(1);
+                    return invigilationRepository.save(invi);
                 });
     }
 

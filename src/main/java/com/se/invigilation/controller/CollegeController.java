@@ -151,7 +151,7 @@ public class CollegeController {
     @PatchMapping("invigilations/edit")
     public Mono<ResultVO> patchInvigilation(@RequestBody Invigilation invigilation) {
         return collegeService.updateInvigilations(invigilation)
-                .thenReturn(ResultVO.ok());
+                .map(invi -> ResultVO.success(Map.of("invi", invi)));
     }
 
     // 重置监考至导入状态
