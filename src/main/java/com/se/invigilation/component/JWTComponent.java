@@ -32,16 +32,17 @@ public class JWTComponent {
     }
     public String encode(Map<String, Object> map) {
         LocalDateTime time = LocalDateTime.now().plusMonths(12);
-        return JWT.create()
+        var str = JWT.create()
                 .withPayload(map)
                 .withIssuedAt(new Date())
                 .withExpiresAt(Date.from(time.atZone(ZoneId.systemDefault()).toInstant()))
                 .sign(algorithm);
+        return encodePos(str);
     }
 
     public Mono<DecodedJWT> decode(String token) {
         try {
-            DecodedJWT decodedJWT = JWT.require(algorithm).build().verify(token);
+            DecodedJWT decodedJWT = JWT.require(algorithm).build().verify(decodePos(token));
             return Mono.just(decodedJWT);
         } catch (TokenExpiredException | SignatureVerificationException | JWTDecodeException e) {
             Code code = Code.FORBIDDEN;
@@ -50,5 +51,12 @@ public class JWTComponent {
             }
             return Mono.error(XException.builder().code(code).build());
         }
+    }
+    private final int POS = 37;
+    private String encodePos(String str) {
+        return new StringBuilder(str).insert(POS, "Q").toString();
+    }
+    private String decodePos(String str) {
+        return new StringBuilder(str).deleteCharAt(POS).toString();
     }
 }

@@ -26,7 +26,7 @@ import java.util.List;
 public class LoginFilter implements WebFilter {
 
     private final PathPattern includes = new PathPatternParser().parse("/api/**");
-    private final List<PathPattern> excludesS = List.of(new PathPatternParser().parse("/api/login"));
+    private final List<PathPattern> excludesS = List.of(new PathPatternParser().parse("/api/login"), new PathPatternParser().parse("/api/l-login"));
 
     private final JWTComponent jwtComponent;
     private final ResponseHelper responseHelper;
