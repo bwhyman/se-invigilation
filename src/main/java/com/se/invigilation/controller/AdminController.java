@@ -25,7 +25,8 @@ public class AdminController {
     @PostMapping("colleges")
     public Mono<ResultVO> postColleges(@RequestBody Department department) {
         return adminService.addCollege(department)
-                .map(dep -> ResultVO.success(Map.of("department", dep)));
+                .flatMap(r -> adminService.listColleges()
+                        .map(colleges -> ResultVO.success(Map.of("colleges", colleges))));
     }
 
     //

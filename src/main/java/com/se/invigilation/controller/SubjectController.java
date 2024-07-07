@@ -57,7 +57,8 @@ public class SubjectController {
     public Mono<ResultVO> postInviStatus(@RequestBody List<User> users,
                                          @RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.updateUserInviStatus(users, depid)
-                .thenReturn(ResultVO.ok());
+                .then(Mono.defer(() -> subjectService.listUsers(depid)
+                        .map(us -> ResultVO.success(Map.of("users", us)))));
     }
 
     @GetMapping("invis/{id}")

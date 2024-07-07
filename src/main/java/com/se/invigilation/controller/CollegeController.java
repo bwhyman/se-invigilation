@@ -320,7 +320,7 @@ public class CollegeController {
                                            @RequestAttribute(RequestConstant.COLLID) String collid) {
         return subjectService.listUsers(depid).flatMap(users -> {
             if (!users.isEmpty()) {
-                return Mono.error(XException.builder().codeN(Code.ERROR).message("禁止移除用户非空部门").build());
+                return Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门"));
             }
             return collegeService.removeDepartment(depid, collid)
                     .flatMap(r -> collegeService.listDepartments(collid)
