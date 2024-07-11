@@ -21,6 +21,13 @@ public class ResultVO {
     public static ResultVO ok() {
         return EMPTY;
     }
+    public static ResultVO ok(String msg) {
+        return ResultVO.builder()
+                .code(200)
+                .message(msg)
+                .data(Map.of())
+                .build();
+    }
 
     public static ResultVO success(Map<String, Object> data) {
         return ResultVO.builder().code(200).data(data).build();

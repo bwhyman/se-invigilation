@@ -44,7 +44,7 @@ public class CollegeController {
             invigilation.setCollId(collid);
         }
         return collegeService.addInvigilations(invigilations)
-                .thenReturn(ResultVO.ok());
+                .map((invis) -> ResultVO.success(Map.of("invis", invis)));
     }
 
     // 获取开放状态部门

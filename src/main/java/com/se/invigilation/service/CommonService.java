@@ -1,5 +1,6 @@
 package com.se.invigilation.service;
 
+import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.repository.SettingRepository;
@@ -20,6 +21,7 @@ public class CommonService {
     private final SettingRepository settingRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DingtalkService dingtalkService;
 
     public Mono<User> getUser(String account) {
         return userRepository.findByAccount(account);
@@ -37,5 +39,15 @@ public class CommonService {
     public Mono<List<User>> listUsersDingIds(List<String> ids) {
         return userRepository.findDingIdByIds(ids)
                 .collectList();
+    }
+
+    public Mono<Integer> cancelInvigilation(Invigilation invi, String userDingIds, String cancelMessage) {
+        return dingtalkService.sendNotice(userDingIds, cancelMessage)
+                .flatMap((r) -> dingtalkService.deleteCalender(invi.getCreateUnionId(), invi.getCalendarId())).
+                thenReturn(1);
+    }
+    // 获取监考用户
+    public Mono<List<User>> listUserDingIdsByInviid(String inviid) {
+        return userRepository.findByInviId(inviid).collectList();
     }
 }

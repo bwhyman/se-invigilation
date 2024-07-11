@@ -5,7 +5,6 @@ import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
 import com.se.invigilation.dox.User;
-import com.se.invigilation.dto.DepartmentDTO;
 import com.se.invigilation.dto.InviCountDTO;
 import com.se.invigilation.repository.*;
 import io.r2dbc.spi.Statement;
@@ -36,8 +35,8 @@ public class CollegeService {
     private final SnowflakeGenerator.Snowflake snowflake;
 
     @Transactional
-    public Mono<Void> addInvigilations(List<Invigilation> invigilations) {
-        return invigilationRepository.saveAll(invigilations).collectList().then();
+    public Mono<List<Invigilation>> addInvigilations(List<Invigilation> invigilations) {
+        return invigilationRepository.saveAll(invigilations).collectList();
     }
 
     @Transactional

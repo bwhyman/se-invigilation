@@ -18,29 +18,22 @@ import com.dingtalk.api.response.OapiMessageCorpconversationAsyncsendV2Response;
 import com.dingtalk.api.response.OapiV2UserGetResponse;
 import com.dingtalk.api.response.OapiV2UserGetbymobileResponse;
 import com.dingtalk.api.response.OapiV2UserListResponse;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.se.invigilation.component.DingtalkComponent;
-import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.DingUserListDTO;
 import com.se.invigilation.exception.Code;
 import com.se.invigilation.exception.XException;
-import com.se.invigilation.repository.InvigilationRepository;
-import com.se.invigilation.repository.UserRepository;
 import com.taobao.api.ApiException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -48,8 +41,6 @@ import java.util.Map;
 public class DingtalkService {
     private final DingtalkComponent dingtalkComponent;
     private final ObjectMapper objectMapper;
-    private final InvigilationRepository invigilationRepository;
-    private final UserRepository userRepository;
     @Value("${dingtalk.agentid}")
     private String agentId;
     private Client eventClient;
@@ -129,7 +120,6 @@ public class DingtalkService {
                 .setEnd(end)
                 .setReminders(List.of(reminders0, reminders1))
                 .setDescription(timeStamp(message))
-                .setExtra(Map.of("noPushNotification", "false"))
                 .setAttendees(list);
 
         try {
@@ -160,31 +150,6 @@ public class DingtalkService {
             log.debug("{}/{}", err.getCode(), err.getMessage());
             return Mono.error(XException.builder().codeN(Code.ERROR).message(err.getMessage()).build());
         }
-    }
-
-    public Mono<Integer> cancel(String inviid) {
-        return invigilationRepository.findById(inviid).flatMap((invi) -> {
-            if (!StringUtils.hasLength(invi.getCalendarId())) {
-                return Mono.just(0);
-            } else {
-                try {
-                    String message = "监考取消：%s; %s";
-                    Map<String, String> time = objectMapper.readValue(invi.getTime(), new TypeReference<>() {
-                    });
-                    Map<String, String> course = objectMapper.readValue(invi.getCourse(), new TypeReference<>() {
-                    });
-                    String cancelMessage = message.formatted(invi.getDate() + " " + time.get("starttime"), course.get("courseName"));
-                    return userRepository.findByInviId(inviid).collectList()
-                            .map(users -> users.stream().map(User::getDingUserId).toList())
-                            .map((userIds) -> String.join(",", userIds))
-                            .flatMap((ids) -> sendNotice(ids, cancelMessage))
-                            .flatMap((r) -> deleteCalender(invi.getCreateUnionId(), invi.getCalendarId())).
-                            thenReturn(1);
-                } catch (JsonProcessingException var12) {
-                    return Mono.error(XException.builder().codeN(Code.ERROR).message(var12.getMessage()).build());
-                }
-            }
-        });
     }
 
     // 导出全部用户钉钉信息
@@ -234,7 +199,7 @@ public class DingtalkService {
         req.setMobile(mobile);
         try {
             OapiV2UserGetbymobileResponse rsp = client.execute(req, dingtalkComponent.getDingtalkToken());
-            if(!rsp.getErrmsg().equals("ok")) {
+            if (!rsp.getErrmsg().equals("ok")) {
                 return Mono.error(XException.builder().codeN(Code.ERROR).message(rsp.getErrmsg()).build());
             }
             return Mono.just(rsp.getResult().getUserid());
