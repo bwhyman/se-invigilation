@@ -102,7 +102,13 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
             where i.coll_id=:collid and i.date>=:sdate and i.date<=:edate
             order by i.date, i.time ->> '$.starttime', i.course ->> '$.courseName', i.course ->> '$.teacherName';
             """)
-    Flux<Invigilation> findByDate(String collid, String sdate, String edate);
+    Flux<Invigilation> findByDateByCollId(String collid, String sdate, String edate);
+    @Query("""
+            select * from invigilation i
+            where i.department ->> '$.depId'=:depid and i.date>=:sdate and i.date<=:edate
+            order by i.date, i.time ->> '$.starttime', i.course ->> '$.courseName', i.course ->> '$.teacherName';
+            """)
+    Flux<Invigilation> findByDateByDepId(String depid, String sdate, String edate);
 
     @Modifying
     @Query("""

@@ -154,4 +154,8 @@ public class SubjectService {
     public Mono<Integer> removeExculdeRule(String rid) {
         return excludeRuleRepository.deleteById(rid).thenReturn(1);
     }
+    public Mono<List<Invigilation>> listInvisByDateByDepId(String depid, String sdate, String edate) {
+        return invigilationRepository.findByDateByDepId(depid, sdate, edate)
+                .collectList();
+    }
 }

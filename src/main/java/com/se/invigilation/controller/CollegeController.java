@@ -9,7 +9,6 @@ import com.se.invigilation.dto.DepartmentDTO;
 import com.se.invigilation.dto.NoticeDTO;
 import com.se.invigilation.dto.NoticeRemarkDTO;
 import com.se.invigilation.exception.Code;
-import com.se.invigilation.exception.XException;
 import com.se.invigilation.service.CollegeService;
 import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.service.SubjectService;
@@ -177,13 +176,6 @@ public class CollegeController {
                 ResultVO.success(Map.of("departments", deps)));
     }
 
-    // 基于教师姓名及专业ID，查找用户
-    @GetMapping("departments/{depid}/names/{name}")
-    public Mono<ResultVO> getUsersName(@PathVariable String depid, @PathVariable String name) {
-        return collegeService.listUsersByName(depid, name)
-                .map(users -> ResultVO.success(Map.of("users", users)));
-    }
-
     // 教师自己的主考，学院要自己分配
     @PostMapping("assigns/invis/{inviid}")
     public Mono<ResultVO> postAssigns(@PathVariable String inviid, @RequestBody AssignUserDTO assignUser) {
@@ -241,17 +233,6 @@ public class CollegeController {
         return collegeService.addUser(user)
                 .thenReturn(ResultVO.ok());
     }
-
-    // 加载指定日期内全部监考
-    @GetMapping("invis/date/{sdate}/{edate}")
-    public Mono<ResultVO> getinvisDate(
-            @PathVariable String sdate,
-            @PathVariable String edate,
-            @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.listInvisByDate(collid, sdate, edate)
-                .map(invis -> ResultVO.success(Map.of("invis", invis)));
-    }
-
     // 发送监考备注工作通知
     @PostMapping("invinotices")
     public Mono<ResultVO> postDingIds(@RequestBody NoticeRemarkDTO notice) {

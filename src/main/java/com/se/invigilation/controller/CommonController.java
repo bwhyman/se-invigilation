@@ -14,7 +14,6 @@ import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.service.SubjectService;
 import com.se.invigilation.vo.RequestConstant;
 import com.se.invigilation.vo.ResultVO;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -22,14 +21,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -158,6 +149,25 @@ public class CommonController {
                             });
                 })
                 .defaultIfEmpty(ResultVO.error(Code.ERROR, "监考获取错误"));
+    }
+
+    // 加载指定日期内全部监考
+    @GetMapping("invis/date/{sdate}/{edate}")
+    public Mono<ResultVO> getinvisDate(
+            @PathVariable String sdate,
+            @PathVariable String edate,
+            @RequestAttribute(RequestConstant.ROLE) String role,
+            @RequestAttribute(RequestConstant.DEPID) String depid,
+            @RequestAttribute(RequestConstant.COLLID) String collid) {
+        Mono<List<Invigilation>> invigilationsMono;
+        if(User.COLLEGE_ADMIN.equals(role)) {
+            invigilationsMono = collegeService.listInvisByDateByCollId(collid, sdate, edate);
+        } else if(User.SUBJECT_ADMIN.equals(role)) {
+            invigilationsMono = subjectService.listInvisByDateByDepId(depid, sdate, edate);
+        }else {
+            invigilationsMono = Mono.empty();
+        }
+        return invigilationsMono.map(invis -> ResultVO.success(Map.of("invis", invis)));
     }
 
 }

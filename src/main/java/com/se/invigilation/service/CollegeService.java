@@ -198,8 +198,8 @@ public class CollegeService {
         return userRepository.save(user).thenReturn(1);
     }
 
-    public Mono<List<Invigilation>> listInvisByDate(String collid, String sdate, String edate) {
-        return invigilationRepository.findByDate(collid, sdate, edate)
+    public Mono<List<Invigilation>> listInvisByDateByCollId(String collid, String sdate, String edate) {
+        return invigilationRepository.findByDateByCollId(collid, sdate, edate)
                 .collectList();
     }
 
