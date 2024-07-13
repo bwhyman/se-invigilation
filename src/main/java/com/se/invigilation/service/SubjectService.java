@@ -94,10 +94,10 @@ public class SubjectService {
         Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
         // 创建新详细分配
         List<Mono<InviDetail>> monos = new ArrayList<>();
-        for (User user : assignUser.getUsers()) {
+        for (String uid : assignUser.getUserIds()) {
             InviDetail d = InviDetail.builder()
                     .inviId(inviid)
-                    .userId(user.getId())
+                    .userId(uid)
                     .build();
             Mono<InviDetail> save = inviDetailRepository.save(d);
             monos.add(save);
@@ -129,8 +129,8 @@ public class SubjectService {
     }
 
     @Transactional
-    public Mono<String> updateInviCalanderNull(String inviid) {
-        return invigilationRepository.updateCalanderNull(inviid).thenReturn(inviid);
+    public Mono<String> updateInviCalanderNull(String inviid, String depid) {
+        return invigilationRepository.updateCalanderNull(inviid, depid).thenReturn(inviid);
     }
 
     @Transactional

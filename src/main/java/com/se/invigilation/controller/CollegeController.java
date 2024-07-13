@@ -111,7 +111,7 @@ public class CollegeController {
     }
 
     // 向部门监考分配教师，发送分配监考提醒
-    @PostMapping({"dispatchnotices"})
+    @PostMapping("dispatchnotices")
     public Mono<ResultVO> postDispatchNotice(@RequestBody NoticeDTO notice) {
         return dingtalkService.sendNotice(notice.getUserIds(), notice.getNoticeMessage()).map((result) ->
                 ResultVO.success(Map.of("dingResp", result)));
@@ -176,12 +176,13 @@ public class CollegeController {
                 ResultVO.success(Map.of("departments", deps)));
     }
 
-    // 教师自己的主考，学院要自己分配
+    // 学院分配
     @PostMapping("assigns/invis/{inviid}")
-    public Mono<ResultVO> postAssigns(@PathVariable String inviid, @RequestBody AssignUserDTO assignUser) {
-        return subjectService.updateInviCalanderNull(inviid).flatMap((r) ->
-                subjectService.addInvidetails(inviid, assignUser)
-                        .thenReturn(ResultVO.ok()));
+    public Mono<ResultVO> postAssigns(@PathVariable String inviid,
+                                      @RequestAttribute(RequestConstant.COLLID) String collid,
+                                      @RequestBody AssignUserDTO assignUser) {
+        return collegeService.assignInvilaton(collid, inviid, assignUser)
+                .map(invigilation -> ResultVO.success(Map.of("invi", invigilation)));
     }
 
     // 修改指定账号角色

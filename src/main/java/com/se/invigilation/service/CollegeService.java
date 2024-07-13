@@ -1,10 +1,8 @@
 package com.se.invigilation.service;
 
 import com.se.invigilation.component.SnowflakeGenerator;
-import com.se.invigilation.dox.Department;
-import com.se.invigilation.dox.Invigilation;
-import com.se.invigilation.dox.Timetable;
-import com.se.invigilation.dox.User;
+import com.se.invigilation.dox.*;
+import com.se.invigilation.dto.AssignUserDTO;
 import com.se.invigilation.dto.InviCountDTO;
 import com.se.invigilation.repository.*;
 import io.r2dbc.spi.Statement;
@@ -245,5 +243,39 @@ public class CollegeService {
         Mono<Integer> uM = userRepository.updateUsersDepartment(depId, collId, name);
         Mono<Integer> inviM = invigilationRepository.updateDepartmentName(depId, collId, name);
         return Mono.when(dM, uM, inviM).thenReturn(1);
+    }
+
+    @Transactional
+    public Mono<Invigilation> assignInvilaton(String collid, String inviid, AssignUserDTO assignUserDTO) {
+        Mono<Invigilation> invigilationMono = invigilationRepository.findByCollId(collid, inviid)
+                .flatMap(invi -> {
+                    invi.setDepartment(assignUserDTO.getDepartment());
+                    if (assignUserDTO.getAmount() != null) {
+                        invi.setAmount(assignUserDTO.getAmount());
+                    }
+                    invi.setDispatcher(assignUserDTO.getDispatcher());
+                    invi.setStatus(Invigilation.ASSIGN);
+                    invi.setExecutor(assignUserDTO.getExecutor());
+                    invi.setAllocator(assignUserDTO.getAllocator());
+                    invi.setCalendarId(null);
+                    invi.setCreateUnionId(null);
+                    invi.setNoticeUserIds(null);
+                    return invigilationRepository.save(invi);
+                });
+
+        Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
+        // 创建新详细分配
+        List<Mono<InviDetail>> monos = new ArrayList<>();
+        for (String uid : assignUserDTO.getUserIds()) {
+            InviDetail d = InviDetail.builder()
+                    .inviId(inviid)
+                    .userId(uid)
+                    .build();
+            Mono<InviDetail> save = inviDetailRepository.save(d);
+            monos.add(save);
+        }
+        Mono<List<InviDetail>> listMono = Flux.merge(monos).collectList();
+        return delInviDetailM.then(Mono.defer(() -> listMono))
+                .flatMap(r -> invigilationMono);
     }
 }

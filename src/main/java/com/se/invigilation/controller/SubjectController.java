@@ -95,8 +95,9 @@ public class SubjectController {
     // 删除原监考详细信息；创建新监考详细信息
     @PostMapping("invidetails/{inviid}")
     public Mono<ResultVO> postInviDetails(@PathVariable String inviid,
+                                          @RequestAttribute(RequestConstant.DEPID) String depid,
                                           @RequestBody AssignUserDTO assignUser) {
-        return subjectService.updateInviCalanderNull(inviid).flatMap((r) ->
+        return subjectService.updateInviCalanderNull(inviid, depid).flatMap((r) ->
                 subjectService.addInvidetails(inviid, assignUser)
                         .thenReturn(ResultVO.ok()));
     }

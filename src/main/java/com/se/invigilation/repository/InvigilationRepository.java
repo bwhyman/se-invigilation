@@ -86,9 +86,9 @@ public interface InvigilationRepository extends ReactiveCrudRepository<Invigilat
     @Modifying
     @Query("""
             update invigilation iv set iv.calendar_id=null, iv.create_union_id=null, iv.notice_user_ids=null
-            where iv.id=:inviid
+            where iv.id=:inviid and iv.department ->> '$.depId'=:depid
             """)
-    Mono<Integer> updateCalanderNull(String inviid);
+    Mono<Integer> updateCalanderNull(String inviid, String depid);
 
     @Query("""
             select * from invigilation i
