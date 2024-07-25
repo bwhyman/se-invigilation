@@ -8,8 +8,10 @@ import com.se.invigilation.exception.XException;
 import com.se.invigilation.repository.DepartmentRepository;
 import com.se.invigilation.repository.SettingRepository;
 import com.se.invigilation.repository.UserRepository;
+import io.r2dbc.spi.Statement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,7 @@ public class AdminService {
     private final SettingRepository settingRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DatabaseClient databaseClient;
 
     @Transactional
     public Mono<Integer> updateSetting(String sid, LocalDate startWeek) {
@@ -43,19 +46,12 @@ public class AdminService {
 
     @Transactional
     public Mono<Department> addCollege(Department department) {
-        return departmentRepository.findByName(department.getName())
-                .filter(dep -> {
-                    throw XException.builder()
-                            .codeN(Code.ERROR)
-                            .message(department.getName() + "已存在")
-                            .build();
-                })
-                .switchIfEmpty(Mono.defer(() -> departmentRepository.save(department)));
+        return departmentRepository.save(department);
     }
 
     //
     public Mono<List<Department>> listColleges() {
-        return departmentRepository.findByCollegeIsNull().collectList();
+        return departmentRepository.findByRoot(Department.ROOT).collectList();
     }
 
     @Transactional
@@ -70,12 +66,13 @@ public class AdminService {
                             {"collId": "%s", "collegeName":  "%s"}
                             """.formatted(collId, collegeName))
                     .name(departName)
+                    .inviStatus(1)
                     .build();
             departs.add(department);
         }
         List<Mono<Department>> monos = new ArrayList<>();
         for (Department department : departs) {
-            Mono<Department> departmentMono = departmentRepository.findByName(department.getName())
+            Mono<Department> departmentMono = departmentRepository.findByCollIdAndName(collId, department.getName())
                     .switchIfEmpty(departmentRepository.save(department));
             monos.add(departmentMono);
         }
@@ -106,6 +103,39 @@ public class AdminService {
                 });
     }
 
+    @Transactional
+    public Mono<Integer> updateCollUsersDing(List<User> users, String collid) {
+        var sql = """
+                update user u set u.ding_user_id=?, u.ding_union_id=?
+                where u.account=? and u.department ->> '$.collId'=?
+                """;
+        return databaseClient.inConnection(conn -> {
+            Statement statement = conn.createStatement(sql);
+            for (int i = 0; i < users.size(); i++) {
+                if (users.get(i).getDingUnionId() != null && users.get(i).getDingUserId() != null) {
+                    statement.bind(0, users.get(i).getDingUserId())
+                            .bind(1, users.get(i).getDingUnionId())
+                            .bind(2, users.get(i).getAccount())
+                            .bind(3, collid);
 
+                } else {
+                    statement.bindNull(0, String.class)
+                            .bindNull(1, String.class)
+                            .bind(2, users.get(i).getAccount())
+                            .bind(3, collid);
+                }
+
+                if (i < users.size() - 1) {
+                    statement.add();
+                }
+
+            }
+            return Flux.from(statement.execute()).collectList();
+        }).thenReturn(1);
+    }
+
+    public Mono<List<User>> listCollegeUsers(String collid) {
+        return userRepository.findByCollId(collid).collectList();
+    }
 }
 

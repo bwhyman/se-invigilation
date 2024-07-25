@@ -11,9 +11,10 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface DepartmentRepository extends ReactiveCrudRepository<Department, String> {
 
-    Mono<Department> findByName(String name);
+    @Query("select * from department d where d.college ->> '$.collId'=:collid and d.name=:name")
+    Mono<Department> findByCollIdAndName(String collid, String name);
 
-    Flux<Department> findByCollegeIsNull();
+    Flux<Department> findByRoot(int root);
 
     @Query("select * from department d where d.college ->> '$.collId'=:collId")
     Flux<Department> findByCollId(String collId);

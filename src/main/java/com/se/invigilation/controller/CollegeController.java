@@ -319,4 +319,11 @@ public class CollegeController {
                 .flatMap(r -> collegeService.listDepartments(collid)
                         .map(departments -> ResultVO.success(Map.of("departments", departments))));
     }
+    //
+    @PatchMapping("users")
+    public Mono<ResultVO> patchUsers(@RequestBody User user,
+            @RequestAttribute(RequestConstant.COLLID) String collid) {
+        return collegeService.updateUser(user, collid)
+                .thenReturn(ResultVO.ok());
+    }
 }

@@ -278,4 +278,24 @@ public class CollegeService {
         return delInviDetailM.then(Mono.defer(() -> listMono))
                 .flatMap(r -> invigilationMono);
     }
+
+    @Transactional
+    public Mono<User> updateUser(User user, String collid) {
+        return userRepository.findByCollId(user.getId(), collid)
+                .flatMap(u -> {
+                    if(user.getName() != null) {
+                        u.setName(user.getName());
+                    }
+                    if(user.getDingUserId() != null) {
+                        u.setDingUserId(user.getDingUserId());
+                    }
+                    if(user.getDingUnionId() != null) {
+                        u.setDingUnionId(user.getDingUnionId());
+                    }
+                    if(user.getMobile() != null) {
+                        u.setDingUnionId(user.getMobile());
+                    }
+                    return userRepository.save(u);
+                });
+    }
 }

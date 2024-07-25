@@ -2,6 +2,7 @@ package com.se.invigilation.controller;
 
 import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Setting;
+import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.UserDTO;
 import com.se.invigilation.service.AdminService;
 import com.se.invigilation.service.DingtalkService;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,7 +40,6 @@ public class AdminController {
 
     @PostMapping("users")
     public Mono<ResultVO> postDepartments(@RequestBody UserDTO userDTO) {
-
         return adminService.addUsers(userDTO.getCollId(), userDTO.getCollegeName(), userDTO.getUsers()).map(us -> ResultVO.ok());
     }
 
@@ -54,5 +55,19 @@ public class AdminController {
     public Mono<ResultVO> getDingUsers(@PathVariable long dingdepid) {
         return dingtalkService.listDingUsers(dingdepid)
                 .map(dingUsers -> ResultVO.success(Map.of("users", dingUsers)));
+    }
+    //
+    @GetMapping("colleges/{collid}/users")
+    public Mono<ResultVO> getCollegeUsers(@PathVariable String collid) {
+        return adminService.listCollegeUsers(collid)
+                .map(users -> ResultVO.success(Map.of("users", users)));
+    }
+
+    // 学院导入指定账号的钉钉信息，部分可能为空，后期单独更新
+    @PostMapping("colleges/{collid}/userdings")
+    public Mono<ResultVO> postUserdings(@PathVariable String collid,
+                                        @RequestBody List<User> users) {
+        return adminService.updateCollUsersDing(users, collid)
+                .thenReturn(ResultVO.ok());
     }
 }

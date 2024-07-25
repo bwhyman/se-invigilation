@@ -17,11 +17,13 @@ import java.time.LocalDateTime;
 public class Department {
     public static final int OPEN = 1;
     public static final int CLOSED = 0;
+    public static final int ROOT = 1;
     @Id
     @CreatedBy
     private String id;
     private String name;
     private String college;
+    private Integer root;
     private Integer inviStatus;
     private String dingDepid;
     private String comment;

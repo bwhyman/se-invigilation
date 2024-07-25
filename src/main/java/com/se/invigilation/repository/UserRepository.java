@@ -88,4 +88,9 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             delete from user u where u.id=:id and u.department ->> '$.collId'=:collid;
             """)
     Mono<Integer> deleteById(String uid, String collid);
+
+    @Query("""
+            select * from user u where u.id=:id and u.department ->> '$.collId'=:collid;
+            """)
+    Mono<User> findByCollId(String id, String collid);
 }

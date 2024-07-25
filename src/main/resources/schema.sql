@@ -36,14 +36,15 @@ create table if not exists `department`
     id          char(19)     not null primary key,
     name        varchar(20)  not null,
     college     json         null comment '{collId, collegeName}',
+    root        tinyint      null     default null,
     invi_status tinyint      null     default 1,
     ding_depid  varchar(50)  null,
-    comment     varchar(500) not null,
+    comment     varchar(500) null     default null,
     insert_time datetime     not null default current_timestamp,
     update_time datetime     not null default current_timestamp on update current_timestamp,
 
     index ((cast(college ->> '$.collId' as char(19)) collate utf8mb4_bin)),
-    unique (name)
+    index (root)
 );
 
 create table if not exists `timetable`
@@ -116,7 +117,7 @@ create table if not exists `exclude_rule`
     startweek    tinyint     not null,
     endweek      tinyint     not null,
     dayweeks     json        not null comment '[1,2,3]',
-    `periods`     json        not null comment  '["12", "78"]',
+    `periods`    json        not null comment '["12", "78"]',
     insert_time  datetime    not null default current_timestamp,
     update_time  datetime    not null default current_timestamp on update current_timestamp,
 
