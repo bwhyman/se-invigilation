@@ -166,11 +166,6 @@ public class CollegeService {
         return userRepository.findByDepIdAndName(depid, name).collectList();
     }
 
-    @Transactional
-    public Mono<Integer> updateRole(String uid, String role, String collid) {
-        return userRepository.updateRole(uid, role, collid);
-    }
-
     public Mono<List<Invigilation>> listInvis(String collid) {
         return invigilationRepository.findByCollId(collid)
                 .collectList();
@@ -179,11 +174,6 @@ public class CollegeService {
     public Mono<List<InviCountDTO>> listCollCounts(String collid) {
         return inviDetailRepository.findCollUserCounts(collid)
                 .collectList();
-    }
-
-    @Transactional
-    public Mono<Integer> updateUserDepartment(String uid, String collid, String depart) {
-        return userRepository.updateDepartment(uid, collid, depart);
     }
 
     @Transactional
@@ -215,10 +205,6 @@ public class CollegeService {
         return invigilationRepository.updateAmount(oldInviid)
                 .flatMap(r -> invigilationRepository.save(invi))
                 .thenReturn(1);
-    }
-
-    public Mono<List<User>> getUser(String collid, String name) {
-        return userRepository.findByName(collid, name).collectList();
     }
 
     public Mono<Integer> removeUser(String uid, String collid) {
@@ -280,9 +266,15 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<User> updateUser(User user, String collid) {
-        return userRepository.findByCollId(user.getId(), collid)
+    public Mono<User> updateUser(String uid, User user, String collid) {
+        return userRepository.findByCollId(uid, collid)
                 .flatMap(u -> {
+                    if(user.getDepartment() != null) {
+                        u.setDepartment(user.getDepartment());
+                    }
+                    if(user.getRole() != null) {
+                        u.setRole(user.getRole());
+                    }
                     if(user.getName() != null) {
                         u.setName(user.getName());
                     }

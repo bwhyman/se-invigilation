@@ -42,18 +42,6 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
 
     @Modifying
     @Query("""
-            update user u set u.role=:role where u.id=:uid and u.department ->> '$.collId'=:collid;
-            """)
-    Mono<Integer> updateRole(String uid, String role, String collid);
-
-    @Modifying
-    @Query("""
-            update user u set u.department=:depart where u.id=:uid and u.department ->> '$.collId'=:collid;
-            """)
-    Mono<Integer> updateDepartment(String uid, String collid, String depart);
-
-    @Modifying
-    @Query("""
             update user u set u.department=json_set(u.department, '$.departmentName', :name)
             where u.department ->> '$.depId'=:depid and u.department ->> '$.collId'=:collid;
             """)
@@ -76,12 +64,6 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             where i.invi_id=:inviid and i.user_id=u.id group by u.id;
             """)
     Flux<User> findByInviId(String inviid);
-
-    @Query("""
-            select * from user u
-            where u.department ->> '$.collId'=:collid and u.name=:name;
-            """)
-    Flux<User> findByName(String collid, String name);
 
     @Modifying
     @Query("""

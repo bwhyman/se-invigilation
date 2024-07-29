@@ -1,5 +1,6 @@
 package com.se.invigilation.dox;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,9 @@ public class Setting {
     private String value;
 
     @ReadOnlyProperty
+    @JsonIgnore
     private LocalDateTime insertTime;
     @ReadOnlyProperty
+    @JsonIgnore
     private LocalDateTime updateTime;
 }

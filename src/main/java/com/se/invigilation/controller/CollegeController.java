@@ -185,18 +185,6 @@ public class CollegeController {
                 .map(invigilation -> ResultVO.success(Map.of("invi", invigilation)));
     }
 
-    // 修改指定账号角色
-    @PostMapping("roles")
-    public Mono<ResultVO> postRole(@RequestBody User user, @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.updateRole(user.getId(), user.getRole(), collid)
-                .map(result -> {
-                    if (result == 1) {
-                        return ResultVO.ok();
-                    }
-                    return ResultVO.error(Code.FORBIDDEN);
-                });
-    }
-
     // 获取全部监考信息
     @GetMapping("invis/all")
     public Mono<ResultVO> getInvis(@RequestAttribute(RequestConstant.COLLID) String collid) {
@@ -209,14 +197,6 @@ public class CollegeController {
     public Mono<ResultVO> getInvisCounts(@RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.listCollCounts(collid)
                 .map(counts -> ResultVO.success(Map.of("counts", counts)));
-    }
-
-    // 更新教师部门
-    @PostMapping("departments/updateuser")
-    public Mono<ResultVO> postDepartment(@RequestBody User user,
-                                         @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.updateUserDepartment(user.getId(), collid, user.getDepartment())
-                .thenReturn(ResultVO.ok());
     }
 
     // 重置密码
@@ -258,14 +238,6 @@ public class CollegeController {
         return collegeService.updateInvigilations(oldInviid, invi)
                 .flatMap(r -> collegeService.listImporteds(collid)
                         .map(invis -> ResultVO.success(Map.of("invis", invis))));
-    }
-
-    // 基于姓名获取用户
-    @GetMapping("users/{name}")
-    public Mono<ResultVO> getUser(@PathVariable String name,
-                                  @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.getUser(collid, name)
-                .map(users -> ResultVO.success(Map.of("users", users)));
     }
 
     // 获取专业全部教师。用于学院直接分配的检索
@@ -320,10 +292,12 @@ public class CollegeController {
                         .map(departments -> ResultVO.success(Map.of("departments", departments))));
     }
     //
-    @PatchMapping("users")
-    public Mono<ResultVO> patchUsers(@RequestBody User user,
+    @PatchMapping("users/{uid}")
+    public Mono<ResultVO> patchUsers(
+            @PathVariable String uid,
+            @RequestBody User user,
             @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.updateUser(user, collid)
+        return collegeService.updateUser(uid, user, collid)
                 .thenReturn(ResultVO.ok());
     }
 }

@@ -1,5 +1,6 @@
 package com.se.invigilation.dox;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +32,6 @@ public class User {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String description;
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String role;
     private String mobile;
     private String dingUnionId;
@@ -39,7 +39,9 @@ public class User {
     private Integer inviStatus;
     private String department;
     @ReadOnlyProperty
+    @JsonIgnore
     private LocalDateTime insertTime;
     @ReadOnlyProperty
+    @JsonIgnore
     private LocalDateTime updateTime;
 }

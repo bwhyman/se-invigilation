@@ -10,7 +10,6 @@ import com.se.invigilation.dto.DepartmentDTO;
 import com.se.invigilation.exception.Code;
 import com.se.invigilation.service.CollegeService;
 import com.se.invigilation.service.CommonService;
-import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.service.SubjectService;
 import com.se.invigilation.vo.RequestConstant;
 import com.se.invigilation.vo.ResultVO;
@@ -33,7 +32,6 @@ public class CommonController {
     private final PasswordEncoder encoder;
     private final JWTComponent jwtComponent;
     private final ObjectMapper objectMapper;
-    private final DingtalkService dingtalkService;
     private final LTokenComponent lTokenComponent;
     private final CollegeService collegeService;
     private final SubjectService subjectService;
