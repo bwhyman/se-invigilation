@@ -37,11 +37,6 @@ public class CollegeService {
         return invigilationRepository.saveAll(invigilations).collectList();
     }
 
-    @Transactional
-    public Mono<Void> addInvigilation(Invigilation invigilation) {
-        return invigilationRepository.save(invigilation).then();
-    }
-
     public Mono<List<Department>> listDepartments(String collId, int status) {
         return departmentRepository.findByCollId(collId, status).collectList();
     }

@@ -117,15 +117,6 @@ public class CollegeController {
                 ResultVO.success(Map.of("dingResp", result)));
     }
 
-    // 手动添加一个监考
-    @PostMapping("invigilation")
-    public Mono<ResultVO> postInvigilation(@RequestBody Invigilation invigilation,
-                                           @RequestAttribute(RequestConstant.COLLID) String collid) {
-        invigilation.setCollId(collid);
-        return collegeService.addInvigilation(invigilation)
-                .thenReturn(ResultVO.ok());
-    }
-
     // 导入单教师课表
     @PostMapping("timetables/{userid}")
     public Mono<ResultVO> postTimetable(@PathVariable String userid,

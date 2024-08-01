@@ -3,6 +3,7 @@ package com.se.invigilation.service;
 import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
+import com.se.invigilation.repository.InvigilationRepository;
 import com.se.invigilation.repository.SettingRepository;
 import com.se.invigilation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class CommonService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final DingtalkService dingtalkService;
+    private final InvigilationRepository invigilationRepository;
 
     public Mono<User> getUser(String account) {
         return userRepository.findByAccount(account);
@@ -50,4 +52,10 @@ public class CommonService {
     public Mono<List<User>> listUserDingIdsByInviid(String inviid) {
         return userRepository.findByInviId(inviid).collectList();
     }
+
+    @Transactional
+    public Mono<Integer> addInvigilation(Invigilation invigilation) {
+        return invigilationRepository.save(invigilation).thenReturn(1);
+    }
+
 }

@@ -168,4 +168,12 @@ public class CommonController {
         return invigilationsMono.map(invis -> ResultVO.success(Map.of("invis", invis)));
     }
 
+    // 手动添加一个监考
+    @PostMapping("invigilations")
+    public Mono<ResultVO> postInvigilation(@RequestBody Invigilation invigilation,
+                                           @RequestAttribute(RequestConstant.COLLID) String collid) {
+        invigilation.setCollId(collid);
+        return commonService.addInvigilation(invigilation)
+                .thenReturn(ResultVO.ok());
+    }
 }
