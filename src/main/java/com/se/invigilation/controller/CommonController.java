@@ -89,7 +89,7 @@ public class CommonController {
 
     @GetMapping("settings")
     public Mono<ResultVO> getSetting() {
-        return commonService.getSettings().map((settings) ->
+        return commonService.listSettings().map((settings) ->
                 ResultVO.success(Map.of("settings", settings)));
     }
 

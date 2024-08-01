@@ -20,8 +20,8 @@ public class Setting {
     @CreatedBy
     private String id;
     private String name;
-    private String key;
-    private String value;
+    private String skey;
+    private String svalue;
 
     @ReadOnlyProperty
     @JsonIgnore

@@ -27,7 +27,7 @@ public class CommonService {
         return userRepository.findByAccount(account);
     }
 
-    public Mono<List<Setting>> getSettings() {
+    public Mono<List<Setting>> listSettings() {
         return settingRepository.findAll().collectList();
     }
 

@@ -11,8 +11,6 @@ import reactor.core.publisher.Mono;
 public interface SettingRepository extends ReactiveCrudRepository<Setting, String> {
 
     @Modifying
-    @Query("update setting s set s.value=:value where s.id=:sid")
+    @Query("update setting s set s.svalue=:value where s.id=:sid")
     Mono<Integer> update(String sid, String value);
-
-    Mono<Setting> findByKey(String key);
 }

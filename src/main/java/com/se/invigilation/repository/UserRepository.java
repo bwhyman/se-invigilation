@@ -35,11 +35,6 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             """)
     Flux<User> findByDepidAndrole(String depid, String collid, String role);
 
-    @Query("""
-            select * from user u where u.department ->> '$.depId'=:depid and u.name=:name;
-            """)
-    Flux<User> findByDepIdAndName(String depid, String name);
-
     @Modifying
     @Query("""
             update user u set u.department=json_set(u.department, '$.departmentName', :name)

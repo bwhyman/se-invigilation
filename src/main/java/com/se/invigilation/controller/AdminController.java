@@ -5,6 +5,7 @@ import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.UserDTO;
 import com.se.invigilation.service.AdminService;
+import com.se.invigilation.service.CommonService;
 import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.vo.ResultVO;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class AdminController {
     private final AdminService adminService;
     private final DingtalkService dingtalkService;
+    private final CommonService commonService;
 
     //
     @PostMapping("colleges")
@@ -45,9 +47,16 @@ public class AdminController {
 
     //
     @PostMapping("settings")
-    public Mono<ResultVO> posSettings(@RequestBody Setting setting) {
+    public Mono<ResultVO> postSettings(@RequestBody Setting setting) {
         return adminService.addSetting(setting).map(s ->
             ResultVO.success(Map.of("setting", s)));
+    }
+    //
+    @PatchMapping("settings")
+    public Mono<ResultVO> patchSettings(@RequestBody Setting setting) {
+        return adminService.updateSetting(setting)
+                .flatMap(r -> commonService.listSettings())
+                .map(settings -> ResultVO.success(Map.of("settings", settings)));
     }
 
     // 获取学院教师钉钉信息

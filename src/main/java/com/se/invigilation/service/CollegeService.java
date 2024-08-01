@@ -162,10 +162,6 @@ public class CollegeService {
         return Flux.merge(monos).then(Mono.just(1));
     }
 
-    public Mono<List<User>> listUsersByName(String depid, String name) {
-        return userRepository.findByDepIdAndName(depid, name).collectList();
-    }
-
     public Mono<List<Invigilation>> listInvis(String collid) {
         return invigilationRepository.findByCollId(collid)
                 .collectList();

@@ -45,8 +45,8 @@ public class InitService {
                                         .flatMap(sc -> {
                                             if (sc == 0) {
                                                 Setting st = Setting.builder()
-                                                        .key("firstweek")
-                                                        .value(LocalDate.now().toString())
+                                                        .skey("firstweek")
+                                                        .svalue(LocalDate.now().toString())
                                                         .name("开学第一天")
                                                         .build();
                                                 return settingRepository.save(st).then();

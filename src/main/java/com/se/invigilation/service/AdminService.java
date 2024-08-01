@@ -35,8 +35,8 @@ public class AdminService {
     private final DatabaseClient databaseClient;
 
     @Transactional
-    public Mono<Integer> updateSetting(String sid, LocalDate startWeek) {
-        return settingRepository.update(sid, startWeek.toString());
+    public Mono<Integer> updateSetting(Setting setting) {
+        return settingRepository.update(setting.getId(), setting.getSvalue());
     }
 
     @Transactional

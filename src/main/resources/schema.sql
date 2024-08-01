@@ -2,12 +2,12 @@ create table if not exists `setting`
 (
     id          char(19)    not null primary key,
     name        varchar(10) not null,
-    `key`       varchar(10) not null,
-    `value`     varchar(20) not null,
+    skey       varchar(10) not null,
+    svalue     varchar(20) not null,
     insert_time datetime    not null default current_timestamp,
     update_time datetime    not null default current_timestamp on update current_timestamp,
 
-    unique (`key`)
+    unique (skey)
 );
 
 create table if not exists `user`
