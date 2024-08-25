@@ -1,4 +1,4 @@
-/docker-compose.yaml
+docker/.env
 *-secret.yml
 target/
 !.mvn/wrapper/maven-wrapper.jar

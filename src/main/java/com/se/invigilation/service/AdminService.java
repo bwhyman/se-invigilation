@@ -112,23 +112,17 @@ public class AdminService {
         return databaseClient.inConnection(conn -> {
             Statement statement = conn.createStatement(sql);
             for (int i = 0; i < users.size(); i++) {
+                statement.bindNull(0, String.class)
+                        .bindNull(1, String.class)
+                        .bind(2, users.get(i).getAccount())
+                        .bind(3, collid);
                 if (users.get(i).getDingUnionId() != null && users.get(i).getDingUserId() != null) {
                     statement.bind(0, users.get(i).getDingUserId())
-                            .bind(1, users.get(i).getDingUnionId())
-                            .bind(2, users.get(i).getAccount())
-                            .bind(3, collid);
-
-                } else {
-                    statement.bindNull(0, String.class)
-                            .bindNull(1, String.class)
-                            .bind(2, users.get(i).getAccount())
-                            .bind(3, collid);
+                            .bind(1, users.get(i).getDingUnionId());
                 }
-
                 if (i < users.size() - 1) {
                     statement.add();
                 }
-
             }
             return Flux.from(statement.execute()).collectList();
         }).thenReturn(1);

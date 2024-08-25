@@ -72,7 +72,7 @@ public class AdminController {
                 .map(users -> ResultVO.success(Map.of("users", users)));
     }
 
-    // 学院导入指定账号的钉钉信息，部分可能为空，后期单独更新
+    // 导入指定学院账号的钉钉信息，部分可能为空，后期单独更新
     @PostMapping("colleges/{collid}/userdings")
     public Mono<ResultVO> postUserdings(@PathVariable String collid,
                                         @RequestBody List<User> users) {
