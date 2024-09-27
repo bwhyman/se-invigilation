@@ -27,8 +27,7 @@ create table if not exists `user`
     update_time   datetime         not null default current_timestamp on update current_timestamp,
 
     unique (account),
-    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin)),
-    index ((cast(department ->> '$.collId' as char(19)) collate utf8mb4_bin), name)
+    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin))
 );
 
 create table if not exists `department`
@@ -62,8 +61,7 @@ create table if not exists `timetable`
     update_time  datetime         not null default current_timestamp on update current_timestamp,
 
     index (coll_id),
-    index (dayweek, startweek, endweek),
-    index (user_id)
+    index (user_id, dayweek, startweek, endweek)
 );
 
 create table if not exists `invigilation`
@@ -87,10 +85,8 @@ create table if not exists `invigilation`
     insert_time     datetime         not null default current_timestamp,
     update_time     datetime         not null default current_timestamp on update current_timestamp,
 
-    index (coll_id, status),
-    index (coll_id, date),
-    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin), status),
-    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin), date)
+    index (coll_id, date, status),
+    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin), date, status)
 );
 
 create table if not exists `invi_detail`
