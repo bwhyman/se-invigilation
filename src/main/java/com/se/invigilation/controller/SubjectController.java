@@ -31,7 +31,7 @@ public class SubjectController {
     @GetMapping("users")
     public Mono<ResultVO> getUsers(@RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.listUsers(depid)
-                .map(users -> ResultVO.success(Map.of("users", users)));
+                .map(ResultVO::success);
     }
 
     // 获取指定状态，指定页，监考
@@ -40,16 +40,14 @@ public class SubjectController {
                                    @PathVariable int page,
                                    @RequestAttribute(RequestConstant.DEPID) String depid) {
         Pageable pageable = PageRequest.of(page - 1, RequestConstant.pageSize);
-        return subjectService.listInvigilations(depid, status, pageable).map((invis) ->
-                ResultVO.success(Map.of("invis", invis)));
+        return subjectService.listInvigilations(depid, status, pageable).map(ResultVO::success);
     }
 
     // 获取指定状态监考数量
     @GetMapping("/invis/status/{status}/total")
     public Mono<ResultVO> getInvisStatusTotal(@PathVariable int status,
                                               @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.getInvisTotal(depid, status).map((total) ->
-                ResultVO.success(Map.of("total", total)));
+        return subjectService.getInvisTotal(depid, status).map(ResultVO::success);
     }
 
     // 更新教师监考状态
@@ -58,14 +56,13 @@ public class SubjectController {
                                          @RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.updateUserInviStatus(users, depid)
                 .then(Mono.defer(() -> subjectService.listUsers(depid)
-                        .map(us -> ResultVO.success(Map.of("users", us)))));
+                        .map(ResultVO::success)));
     }
 
     @GetMapping("invis/{id}")
     public Mono<ResultVO> getInviDetail(@PathVariable String id,
                                         @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.getInvigilation(depid, id).map((invi) ->
-                ResultVO.success(Map.of("invi", invi)));
+        return subjectService.getInvigilation(depid, id).map(ResultVO::success);
     }
 
     // 获取开放状态教师，指定周/星期的全部课表
@@ -73,23 +70,20 @@ public class SubjectController {
     public Mono<ResultVO> getTimetables(@PathVariable int week,
                                         @PathVariable int dayweek,
                                         @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listTimetable(depid, week, dayweek).map((timetables) ->
-                ResultVO.success(Map.of("timetables", timetables)));
+        return subjectService.listTimetable(depid, week, dayweek).map(ResultVO::success);
     }
 
     // 获取部门教师监考数量
     @GetMapping("invidetails/counts")
     public Mono<ResultVO> getCounts(@RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listDepUserCounts(depid).map((counts) ->
-                ResultVO.success(Map.of("counts", counts)));
+        return subjectService.listDepUserCounts(depid).map(ResultVO::success);
     }
 
     // 获取指定日期全部监考
     @GetMapping("invis/dates/{date}")
     public Mono<ResultVO> getDateInvis(@PathVariable LocalDate date,
                                        @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listInvigilations(depid, date).map((invigilations) ->
-                ResultVO.success(Map.of("invis", invigilations)));
+        return subjectService.listInvigilations(depid, date).map(ResultVO::success);
     }
 
     // 删除原监考详细信息；创建新监考详细信息
@@ -106,7 +100,7 @@ public class SubjectController {
     @GetMapping("invidetailusers/{inviid}")
     public Mono<ResultVO> getInviUsers(@PathVariable String inviid) {
         return subjectService.listInviDetailUsers(inviid)
-                .map(users -> ResultVO.success(Map.of("users", users)));
+                .map(ResultVO::success);
     }
 
     // 发送钉钉监考通知，监考日程
@@ -125,14 +119,14 @@ public class SubjectController {
                                                 notice.getInviId(),
                                                 eventId, notice.getCreateUnionId(),
                                                 notice.getNoticeUserIds())
-                                        .thenReturn(ResultVO.success(Map.of("code", eventId))))
+                                        .thenReturn(ResultVO.success(eventId)))
                 );
     }
 
     @GetMapping("comments")
     public Mono<ResultVO> getComment(@RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.getDepartmentComment(depid)
-                .map(comment -> ResultVO.success(Map.of("comment", comment)));
+                .map(ResultVO::success);
     }
 
     // 专业添加如某教师周末不分配的监考备忘录
@@ -151,13 +145,13 @@ public class SubjectController {
         rule.setDepId(depid);
         return subjectService.addExculdeRule(rule)
                 .flatMap(r -> subjectService.listExcludeRules(depid)
-                        .map(rules -> ResultVO.success(Map.of("rules", rules))));
+                        .map(ResultVO::success));
     }
 
     @GetMapping("excluderules")
     public Mono<ResultVO> getExculdeRules(@RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.listExcludeRules(depid)
-                .map(rules -> ResultVO.success(Map.of("rules", rules)));
+                .map(ResultVO::success);
     }
 
     @DeleteMapping("excluderules/{exid}")
@@ -165,6 +159,6 @@ public class SubjectController {
                                           @RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.removeExculdeRule(exid)
                 .flatMap(r -> subjectService.listExcludeRules(depid)
-                        .map(rules -> ResultVO.success(Map.of("rules", rules))));
+                        .map(ResultVO::success));
     }
 }

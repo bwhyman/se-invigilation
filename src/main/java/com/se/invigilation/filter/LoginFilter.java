@@ -35,13 +35,13 @@ public class LoginFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        if (!includes.matches(request.getPath().pathWithinApplication())) {
+            return chain.filter(exchange);
+        }
         for (PathPattern p : excludesS) {
             if (p.matches(request.getPath().pathWithinApplication())) {
                 return chain.filter(exchange);
             }
-        }
-        if (!includes.matches(request.getPath().pathWithinApplication())) {
-            return responseHelper.response(Code.BAD_REQUEST, exchange);
         }
         String token = request.getHeaders().getFirst(RequestConstant.TOKEN);
         if (token == null) {
@@ -57,16 +57,5 @@ public class LoginFilter implements WebFilter {
                     return chain.filter(exchange);
                 })
                 .onErrorResume(e -> responseHelper.response(((XException) e).getCode(), exchange));
-
-        //
-        /*DecodedJWT decode = jwtComponent.decode(token);
-        exchange.getAttributes().put(RequestAttributeConstant.UID, decode.getClaim(RequestAttributeConstant.UID).asString());
-        exchange.getAttributes().put(RequestAttributeConstant.ROLE, decode.getClaim(RequestAttributeConstant.ROLE).asString());
-
-        if (!decode.getClaim(RequestAttributeConstant.GROUP_NUMBER).isMissing()) {
-            exchange.getAttributes().put(RequestAttributeConstant.GROUP_NUMBER, decode.getClaim(RequestAttributeConstant.GROUP_NUMBER).asInt());
-        }
-        return chain.filter(exchange);*/
-
     }
 }

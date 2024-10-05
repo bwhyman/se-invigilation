@@ -36,21 +36,18 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
-          # key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "target/*.jar"
           target: ${{ secrets.TARGET }}
+          # 仅复制文件，不复制目录
           strip_components: 1
           rm: true
-        
-  deploy:
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
+      # deploy
       - name: executing remote ssh commands using password
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
-          # key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: ${{ secrets.SCRIPT_AFTER }}
+          # cd /home/services/se-invigilation/
+          # docker compose up --force-recreate --no-deps -d openjdk
+          script: ${{ secrets.RECREATE_CONTAINER }}

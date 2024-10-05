@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/")
@@ -30,14 +29,14 @@ public class AdminController {
     public Mono<ResultVO> postColleges(@RequestBody Department department) {
         return adminService.addCollege(department)
                 .flatMap(r -> adminService.listColleges()
-                        .map(colleges -> ResultVO.success(Map.of("colleges", colleges))));
+                        .map(ResultVO::success));
     }
 
     //
     @GetMapping("colleges")
     public Mono<ResultVO> getColleges() {
         return adminService.listColleges()
-                .map(colleges -> ResultVO.success(Map.of("colleges", colleges)));
+                .map(ResultVO::success);
     }
 
     @PostMapping("users")
@@ -48,28 +47,27 @@ public class AdminController {
     //
     @PostMapping("settings")
     public Mono<ResultVO> postSettings(@RequestBody Setting setting) {
-        return adminService.addSetting(setting).map(s ->
-            ResultVO.success(Map.of("setting", s)));
+        return adminService.addSetting(setting).map(ResultVO::success);
     }
     //
     @PatchMapping("settings")
     public Mono<ResultVO> patchSettings(@RequestBody Setting setting) {
         return adminService.updateSetting(setting)
                 .flatMap(r -> commonService.listSettings())
-                .map(settings -> ResultVO.success(Map.of("settings", settings)));
+                .map(ResultVO::success);
     }
 
     // 获取学院教师钉钉信息
     @GetMapping("dingusers/{dingdepid}")
     public Mono<ResultVO> getDingUsers(@PathVariable long dingdepid) {
         return dingtalkService.listDingUsers(dingdepid)
-                .map(dingUsers -> ResultVO.success(Map.of("users", dingUsers)));
+                .map(ResultVO::success);
     }
     //
     @GetMapping("colleges/{collid}/users")
     public Mono<ResultVO> getCollegeUsers(@PathVariable String collid) {
         return adminService.listCollegeUsers(collid)
-                .map(users -> ResultVO.success(Map.of("users", users)));
+                .map(ResultVO::success);
     }
 
     // 导入指定学院账号的钉钉信息，部分可能为空，后期单独更新

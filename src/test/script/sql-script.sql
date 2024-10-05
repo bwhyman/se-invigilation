@@ -14,7 +14,7 @@ FROM invigilation i;
 SELECT count(DISTINCT(concat(t.user_id, t.dayweek, t.startweek, t.endweek)))/count(*) AS Selectivity
 FROM timetable t;
 
-# Using index condition
+# Using where; Using index
 explain
 select t.id from timetable t
 where t.coll_id='1259782025195839488';
@@ -24,14 +24,29 @@ explain
 select * from timetable t
 where t.coll_id='1259782025195839488';
 
+# Using index condition; Using where. dayweek不在collid索引
+explain
+select * from timetable t
+where t.coll_id='1259782025195839488' and t.dayweek=1;
+
 # Using index condition
 explain
 select * from timetable t
 where t.user_id='1265883399983886340';
 
+# Using where; Using index. 复合索引，查询字段在索引
+explain
+select t.dayweek from timetable t
+where t.user_id='1265883399983886340';
+
 # Using index condition; 复合索引
 explain
 select * from timetable t
+where t.user_id='1265883399983886340' and t.dayweek=1;
+
+# Using index condition; 复合索引
+explain
+select t.course from timetable t
 where t.user_id='1265883399983886340' and t.dayweek=1;
 
 # Using where; Using index; startweek复合索引

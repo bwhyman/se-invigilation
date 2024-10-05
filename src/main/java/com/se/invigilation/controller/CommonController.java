@@ -55,7 +55,7 @@ public class CommonController {
                 if (ltoken != null) {
                     response.getHeaders().add("ltoken", lTokenComponent.encode(u.getAccount()));
                 }
-                return ResultVO.success(Map.of("user", u));
+                return ResultVO.success(u);
             } catch (JsonProcessingException var6) {
                 return ResultVO.error(Code.LOGIN_ERROR);
             }
@@ -79,7 +79,7 @@ public class CommonController {
                         String token = jwtComponent.encode(tokenM);
                         response.getHeaders().add("token", token);
                         response.getHeaders().add("role", u.getRole());
-                        return ResultVO.success(Map.of("user", u));
+                        return ResultVO.success(u);
                     } catch (JsonProcessingException var6) {
                         return ResultVO.error(Code.LOGIN_ERROR);
                     }
@@ -89,8 +89,7 @@ public class CommonController {
 
     @GetMapping("settings")
     public Mono<ResultVO> getSetting() {
-        return commonService.listSettings().map((settings) ->
-                ResultVO.success(Map.of("settings", settings)));
+        return commonService.listSettings().map(ResultVO::success);
     }
 
     @PostMapping("passwords")
@@ -103,15 +102,14 @@ public class CommonController {
     @GetMapping("users/{account}")
     public Mono<ResultVO> getUser(@PathVariable String account) {
         return commonService.getUser(account)
-                .map(user -> ResultVO.success(Map.of("user", user)));
+                .map(ResultVO::success);
     }
 
     // 获取指定全部用户的DING IDS。虽然是获取，但通过post传递参数较方便
     @PostMapping("invinotices/dingids")
     public Mono<ResultVO> postUserIds(@RequestBody List<String> ids) {
         log.debug("{}", ids);
-        return commonService.listUsersDingIds(ids)
-                .map(users -> ResultVO.success(Map.of("users", users)));
+        return commonService.listUsersDingIds(ids).map(ResultVO::success);
     }
 
     @PostMapping("cancelinvinotices/{inviid}")
@@ -165,7 +163,7 @@ public class CommonController {
         }else {
             invigilationsMono = Mono.empty();
         }
-        return invigilationsMono.map(invis -> ResultVO.success(Map.of("invis", invis)));
+        return invigilationsMono.map(ResultVO::success);
     }
 
     // 手动添加一个监考
