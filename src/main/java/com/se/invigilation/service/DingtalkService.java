@@ -131,7 +131,7 @@ public class DingtalkService {
             return Mono.just(resp.getBody().getId());
         } catch (Exception _err) {
             TeaException err = new TeaException(_err.getMessage(), _err);
-            log.debug("{}/{}", err.getCode(), err.getMessage());
+            log.error("{}/{}", err.getCode(), err.getMessage());
             return Mono.error(XException.builder().codeN(Code.ERROR).message(err.getMessage()).build());
         }
     }
@@ -145,7 +145,7 @@ public class DingtalkService {
             log.debug("getStatusCode(): {}", deleteEventResponse.getStatusCode());
             return Mono.just("deleteEventResponse.getStatusCode()");
         } catch (Exception _err) {
-            log.debug("deleteCalender Exception{}", _err.getMessage());
+            log.error("deleteCalender Exception{}", _err.getMessage());
             TeaException err = new TeaException(_err.getMessage(), _err);
             log.debug("{}/{}", err.getCode(), err.getMessage());
             return Mono.error(XException.builder().codeN(Code.ERROR).message(err.getMessage()).build());

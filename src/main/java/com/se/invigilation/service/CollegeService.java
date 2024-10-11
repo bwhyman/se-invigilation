@@ -276,7 +276,7 @@ public class CollegeService {
                         u.setDingUnionId(user.getDingUnionId());
                     }
                     if(user.getMobile() != null) {
-                        u.setDingUnionId(user.getMobile());
+                        u.setMobile(user.getMobile());
                     }
                     return userRepository.save(u);
                 });

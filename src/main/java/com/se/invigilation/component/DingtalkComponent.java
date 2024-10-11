@@ -57,11 +57,11 @@ public class DingtalkComponent {
             cacheToken = token;
             return token;
         } catch (TeaException err) {
-            log.debug("{}/{}", err.getCode(), err.getMessage());
+            log.error("{}/{}", err.getCode(), err.getMessage());
 
         } catch (Exception _err) {
             TeaException err = new TeaException(_err.getMessage(), _err);
-            log.debug("{}/{}", err.getCode(), err.getMessage());
+            log.error("{}/{}", err.getCode(), err.getMessage());
         }
         return "";
     }
