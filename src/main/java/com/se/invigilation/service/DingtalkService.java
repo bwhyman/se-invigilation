@@ -200,10 +200,12 @@ public class DingtalkService {
         try {
             OapiV2UserGetbymobileResponse rsp = client.execute(req, dingtalkComponent.getDingtalkToken());
             if (!rsp.getErrmsg().equals("ok")) {
+                log.debug("{}", rsp);
                 return Mono.error(XException.builder().codeN(Code.ERROR).message(rsp.getErrmsg()).build());
             }
             return Mono.just(rsp.getResult().getUserid());
         } catch (ApiException e) {
+            log.debug(e.toString());
             return Mono.error(XException.builder().codeN(Code.ERROR).message(e.getMessage()).build());
         }
     }

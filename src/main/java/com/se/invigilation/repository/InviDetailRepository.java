@@ -11,11 +11,11 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface InviDetailRepository extends ReactiveCrudRepository<InviDetail, String> {
     @Query("""
-            select i.user_id as user_id, u.name, count(i.id) as count
-            from invi_detail i join user u
-            on i.user_id=u.id
+            select u.id as user_id, u.name, count(i.user_id) as count
+            from user u left join invi_detail i
+            on u.id=i.user_id
             where u.department ->> '$.depId'=:depid
-            group by i.user_id
+            group by u.id
             order by count
             """)
     Flux<InviCountDTO> findDepUserCounts(String depid);
