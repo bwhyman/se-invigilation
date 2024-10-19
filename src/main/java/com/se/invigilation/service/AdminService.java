@@ -3,8 +3,6 @@ package com.se.invigilation.service;
 import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
-import com.se.invigilation.exception.Code;
-import com.se.invigilation.exception.XException;
 import com.se.invigilation.repository.DepartmentRepository;
 import com.se.invigilation.repository.SettingRepository;
 import com.se.invigilation.repository.UserRepository;
@@ -18,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -59,24 +56,18 @@ public class AdminService {
         Set<String> departments = userDTOS.stream()
                 .map(User::getDepartment)
                 .collect(Collectors.toSet());
-        List<Department> departs = new ArrayList<>();
-        for (String departName : departments) {
-            Department department = Department.builder()
-                    .college("""
-                            {"collId": "%s", "collegeName":  "%s"}
-                            """.formatted(collId, collegeName))
-                    .name(departName)
-                    .inviStatus(1)
-                    .build();
-            departs.add(department);
-        }
-        List<Mono<Department>> monos = new ArrayList<>();
-        for (Department department : departs) {
-            Mono<Department> departmentMono = departmentRepository.findByCollIdAndName(collId, department.getName())
-                    .switchIfEmpty(departmentRepository.save(department));
-            monos.add(departmentMono);
-        }
-        return Flux.merge(monos).collectList()
+        return Flux.fromIterable(departments)
+                .flatMap(departName -> {
+                    Department department = Department.builder()
+                            .college("""
+                                    {"collId": "%s", "collegeName":  "%s"}
+                                    """.formatted(collId, collegeName))
+                            .name(departName)
+                            .inviStatus(1)
+                            .build();
+                    return departmentRepository.findByCollIdAndName(collId, department.getName())
+                            .switchIfEmpty(departmentRepository.save(department));
+                }).collectList()
                 .flatMap(deps -> {
                     List<User> users = new ArrayList<>();
                     for (User userDTO : userDTOS) {
@@ -101,6 +92,7 @@ public class AdminService {
                     }
                     return userRepository.saveAll(users).collectList();
                 });
+
     }
 
     @Transactional

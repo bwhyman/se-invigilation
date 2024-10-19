@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -58,14 +58,12 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<List<Integer>> updateDispatcher(List<Invigilation> invigilations, String collid) {
-        List<Mono<Integer>> monos = new ArrayList<>();
-        for (Invigilation invi : invigilations) {
-            invi.setStatus(Invigilation.DISPATCH);
-            Mono<Integer> integerMono = invigilationRepository.updateInvi(invi, collid);
-            monos.add(integerMono);
-        }
-        return Flux.merge(monos).collectList();
+    public Mono<Void> updateDispatcher(List<Invigilation> invigilations, String collid) {
+        return Flux.fromIterable(invigilations)
+                .flatMap(invi -> {
+                    invi.setStatus(Invigilation.DISPATCH);
+                    return invigilationRepository.updateInvi(invi, collid);
+                }).then();
     }
 
     public Mono<List<User>> listUser(String collid) {
@@ -80,7 +78,7 @@ public class CollegeService {
                 values(?,?,?,?,?,?,?,?,?)
                 """;
         return timetableRepository.deleteByCollId(collid)
-                .flatMap(r -> databaseClient.inConnection(conn -> {
+                .then(databaseClient.inConnection(conn -> {
                     Statement statement = conn.createStatement(sql);
                     for (int i = 0; i < timetables.size(); i++) {
                         var tb = timetables.get(i);
@@ -99,7 +97,7 @@ public class CollegeService {
                         }
                     }
                     return Flux.from(statement.execute()).collectList();
-                })).then();
+                }).then());
     }
 
     public Mono<List<User>> listUsers(String depid, String collid, String role) {
@@ -107,10 +105,9 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> addTimetable(String userid, List<Timetable> timetables) {
-        return timetableRepository.deleteByUserId(userid).flatMap((r) ->
-                timetableRepository.saveAll(timetables).collectList()
-                        .thenReturn(1));
+    public Mono<Void> addTimetable(String userid, List<Timetable> timetables) {
+        return timetableRepository.deleteByUserId(userid)
+                .then(timetableRepository.saveAll(timetables).then());
     }
 
     @Transactional
@@ -131,30 +128,28 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> resetInvigilation(String inviid) {
+    public Mono<Void> resetInvigilation(String inviid) {
         return invigilationRepository.findById(inviid).flatMap((invi) -> {
-            invi.setStatus(Invigilation.IMPORT);
-            invi.setRemark(null);
-            invi.setDepartment(null);
-            invi.setDispatcher(null);
-            invi.setAllocator(null);
-            invi.setExecutor(null);
-            invi.setCalendarId(null);
-            invi.setCreateUnionId(null);
-            invi.setNoticeUserIds(null);
-            return invigilationRepository.save(invi);
-        }).flatMap((r) -> inviDetailRepository.deleteByInviId(inviid));
+                    invi.setStatus(Invigilation.IMPORT);
+                    invi.setRemark(null);
+                    invi.setDepartment(null);
+                    invi.setDispatcher(null);
+                    invi.setAllocator(null);
+                    invi.setExecutor(null);
+                    invi.setCalendarId(null);
+                    invi.setCreateUnionId(null);
+                    invi.setNoticeUserIds(null);
+                    return invigilationRepository.save(invi);
+                })
+                .then(inviDetailRepository.deleteByInviId(inviid))
+                .then();
     }
 
     @Transactional
-    public Mono<Integer> updateDepartmentInviStatus(List<Department> departments) {
-        List<Mono<Integer>> monos = new ArrayList<>();
-        for (Department depart : departments) {
-            Mono<Integer> integerMono = departmentRepository
-                    .updateInviStatusById(depart.getId(), depart.getInviStatus());
-            monos.add(integerMono);
-        }
-        return Flux.merge(monos).then(Mono.just(1));
+    public Mono<Void> updateDepartmentInviStatus(List<Department> departments) {
+        return Flux.fromIterable(departments)
+                .flatMap(depart -> departmentRepository
+                        .updateInviStatusById(depart.getId(), depart.getInviStatus())).then();
     }
 
     public Mono<List<Invigilation>> listInvis(String collid) {
@@ -192,10 +187,10 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> updateInvigilations(String oldInviid, Invigilation invi) {
+    public Mono<Void> updateInvigilations(String oldInviid, Invigilation invi) {
         return invigilationRepository.updateAmount(oldInviid)
-                .flatMap(r -> invigilationRepository.save(invi))
-                .thenReturn(1);
+                .then(invigilationRepository.save(invi))
+                .then();
     }
 
     public Mono<Integer> removeUser(String uid, String collid) {
@@ -224,6 +219,16 @@ public class CollegeService {
 
     @Transactional
     public Mono<Invigilation> assignInvilaton(String collid, String inviid, AssignUserDTO assignUserDTO) {
+        Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
+        // 创建新详细分配
+        Mono<Void> detailM = Flux.fromIterable(Arrays.asList(assignUserDTO.getUserIds()))
+                .flatMap(uid -> {
+                    InviDetail d = InviDetail.builder()
+                            .inviId(inviid)
+                            .userId(uid)
+                            .build();
+                    return inviDetailRepository.save(d);
+                }).then();
         Mono<Invigilation> invigilationMono = invigilationRepository.findByCollId(collid, inviid)
                 .flatMap(invi -> {
                     invi.setDepartment(assignUserDTO.getDepartment());
@@ -240,42 +245,29 @@ public class CollegeService {
                     return invigilationRepository.save(invi);
                 });
 
-        Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
-        // 创建新详细分配
-        List<Mono<InviDetail>> monos = new ArrayList<>();
-        for (String uid : assignUserDTO.getUserIds()) {
-            InviDetail d = InviDetail.builder()
-                    .inviId(inviid)
-                    .userId(uid)
-                    .build();
-            Mono<InviDetail> save = inviDetailRepository.save(d);
-            monos.add(save);
-        }
-        Mono<List<InviDetail>> listMono = Flux.merge(monos).collectList();
-        return delInviDetailM.then(Mono.defer(() -> listMono))
-                .flatMap(r -> invigilationMono);
+        return delInviDetailM.then(detailM).then(invigilationMono);
     }
 
     @Transactional
     public Mono<User> updateUser(String uid, User user, String collid) {
         return userRepository.findByCollId(uid, collid)
                 .flatMap(u -> {
-                    if(user.getDepartment() != null) {
+                    if (user.getDepartment() != null) {
                         u.setDepartment(user.getDepartment());
                     }
-                    if(user.getRole() != null) {
+                    if (user.getRole() != null) {
                         u.setRole(user.getRole());
                     }
-                    if(user.getName() != null) {
+                    if (user.getName() != null) {
                         u.setName(user.getName());
                     }
-                    if(user.getDingUserId() != null) {
+                    if (user.getDingUserId() != null) {
                         u.setDingUserId(user.getDingUserId());
                     }
-                    if(user.getDingUnionId() != null) {
+                    if (user.getDingUnionId() != null) {
                         u.setDingUnionId(user.getDingUnionId());
                     }
-                    if(user.getMobile() != null) {
+                    if (user.getMobile() != null) {
                         u.setMobile(user.getMobile());
                     }
                     return userRepository.save(u);

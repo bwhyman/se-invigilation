@@ -108,7 +108,6 @@ public class CommonController {
     // 获取指定全部用户的DING IDS。虽然是获取，但通过post传递参数较方便
     @PostMapping("invinotices/dingids")
     public Mono<ResultVO> postUserIds(@RequestBody List<String> ids) {
-        log.debug("{}", ids);
         return commonService.listUsersDingIds(ids).map(ResultVO::success);
     }
 

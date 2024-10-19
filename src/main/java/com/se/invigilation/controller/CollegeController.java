@@ -48,13 +48,15 @@ public class CollegeController {
     // 获取开放状态部门
     @GetMapping("departments/opened")
     public Mono<ResultVO> getOpenedDepartments(@RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.listDepartments(collid, Department.OPEN).map(ResultVO::success);
+        return collegeService.listDepartments(collid, Department.OPEN)
+                .map(ResultVO::success);
     }
 
     // 获取全部导入状态监考
     @GetMapping("invilations/imported")
     public Mono<ResultVO> getImporteds(@RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.listImporteds(collid).map(ResultVO::success);
+        return collegeService.listImporteds(collid)
+                .map(ResultVO::success);
     }
 
     // 按部门，页数，获取下发状态监考
@@ -63,14 +65,16 @@ public class CollegeController {
                                          @PathVariable int page,
                                          @RequestAttribute(RequestConstant.COLLID) String collid) {
         Pageable pageable = PageRequest.of(page - 1, RequestConstant.pageSize);
-        return collegeService.listDispatchedInvis(depid, collid, pageable).map(ResultVO::success);
+        return collegeService.listDispatchedInvis(depid, collid, pageable)
+                .map(ResultVO::success);
     }
 
     // 获取指定部门下发状态监考数量
     @GetMapping("invigilations/dispatched/{depid}/total")
     public Mono<ResultVO> getDispatchedTotals(@PathVariable String depid,
                                               @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.getdispatchedTotal(depid, collid).map(ResultVO::success);
+        return collegeService.getdispatchedTotal(depid, collid)
+                .map(ResultVO::success);
     }
 
     // 更新监考状态为下发状态
@@ -78,13 +82,15 @@ public class CollegeController {
     public Mono<ResultVO> patchInvigilations(@RequestBody List<Invigilation> invigilations,
                                              @RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.updateDispatcher(invigilations, collid)
-                .flatMap(r -> collegeService.listImporteds(collid).map(ResultVO::success));
+                .then(collegeService.listImporteds(collid)
+                        .map(ResultVO::success));
     }
 
     // 获取全学院教师
     @GetMapping("users")
     public Mono<ResultVO> getUsers(@RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.listUser(collid).map(ResultVO::success);
+        return collegeService.listUser(collid)
+                .map(ResultVO::success);
     }
 
     // 先移除学院课表，导入全院教师课表
@@ -99,13 +105,15 @@ public class CollegeController {
     @GetMapping("dispatchers/{depid}")
     public Mono<ResultVO> getSubjectDispatchers(@PathVariable String depid,
                                                 @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.listUsers(depid, collid, User.SUBJECT_ADMIN).map(ResultVO::success);
+        return collegeService.listUsers(depid, collid, User.SUBJECT_ADMIN)
+                .map(ResultVO::success);
     }
 
     // 向部门监考分配教师，发送分配监考提醒
     @PostMapping("dispatchnotices")
     public Mono<ResultVO> postDispatchNotice(@RequestBody NoticeDTO notice) {
-        return dingtalkService.sendNotice(notice.getUserIds(), notice.getNoticeMessage()).map(ResultVO::success);
+        return dingtalkService.sendNotice(notice.getUserIds(), notice.getNoticeMessage())
+                .map(ResultVO::success);
     }
 
     // 导入单教师课表
@@ -124,8 +132,8 @@ public class CollegeController {
     @DeleteMapping("invigilations/{inviid}")
     public Mono<ResultVO> deleteInvigilation(@PathVariable String inviid,
                                              @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.removeInvigilation(inviid, collid).
-                thenReturn(ResultVO.ok());
+        return collegeService.removeInvigilation(inviid, collid)
+                .thenReturn(ResultVO.ok());
     }
 
     // 更新监考基本信息
@@ -146,14 +154,16 @@ public class CollegeController {
     @PatchMapping("departments/invistatus")
     public Mono<ResultVO> patchDepartmentsInviStatus(@RequestAttribute(RequestConstant.COLLID) String collid,
                                                      @RequestBody List<Department> departments) {
-        return collegeService.updateDepartmentInviStatus(departments).flatMap((r) ->
-                collegeService.listDepartments(collid).map(ResultVO::success));
+        return collegeService.updateDepartmentInviStatus(departments)
+                .then(collegeService.listDepartments(collid)
+                        .map(ResultVO::success));
     }
 
     // 获取全部部门
     @GetMapping("departments")
     public Mono<ResultVO> getDepartments(@RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.listDepartments(collid).map(ResultVO::success);
+        return collegeService.listDepartments(collid)
+                .map(ResultVO::success);
     }
 
     // 学院分配
@@ -194,18 +204,20 @@ public class CollegeController {
         return collegeService.addUser(user)
                 .thenReturn(ResultVO.ok());
     }
+
     // 发送监考备注工作通知
     @PostMapping("invinotices")
     public Mono<ResultVO> postDingIds(@RequestBody NoticeRemarkDTO notice) {
         return collegeService.updateInviRemark(notice.getInviIds(), notice.getRemark())
-                .flatMap(c -> dingtalkService.sendNotice(notice.getDingUserIds(), notice.getRemark())
+                .then(dingtalkService.sendNotice(notice.getDingUserIds(), notice.getRemark())
                         .map(ResultVO::success));
     }
 
     @GetMapping("invis/{id}")
     public Mono<ResultVO> getInviDetail(@PathVariable String id,
                                         @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return collegeService.getInvigilation(collid, id).map(ResultVO::success);
+        return collegeService.getInvigilation(collid, id)
+                .map(ResultVO::success);
     }
 
     // 剪裁监考。将指定监考人数减一，并复制一份独立的新监考。
@@ -215,7 +227,7 @@ public class CollegeController {
                                            @RequestAttribute(RequestConstant.COLLID) String collid) {
         invi.setCollId(collid);
         return collegeService.updateInvigilations(oldInviid, invi)
-                .flatMap(r -> collegeService.listImporteds(collid)
+                .then(collegeService.listImporteds(collid)
                         .map(ResultVO::success));
     }
 
@@ -256,8 +268,8 @@ public class CollegeController {
                 return Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门"));
             }
             return collegeService.removeDepartment(depid, collid)
-                    .flatMap(r -> collegeService.listDepartments(collid)
-                            .map(ResultVO::success));
+                    .then(collegeService.listDepartments(collid))
+                    .map(ResultVO::success);
         });
     }
 
@@ -267,9 +279,10 @@ public class CollegeController {
                                           @RequestAttribute(RequestConstant.COLLID) String collid) {
 
         return collegeService.updateDetparmentName(depid, collid, depart.getDepartmentName())
-                .flatMap(r -> collegeService.listDepartments(collid)
-                        .map(ResultVO::success));
+                .then(collegeService.listDepartments(collid))
+                .map(ResultVO::success);
     }
+
     //
     @PatchMapping("users/{uid}")
     public Mono<ResultVO> patchUsers(

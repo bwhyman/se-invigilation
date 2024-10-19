@@ -40,14 +40,16 @@ public class SubjectController {
                                    @PathVariable int page,
                                    @RequestAttribute(RequestConstant.DEPID) String depid) {
         Pageable pageable = PageRequest.of(page - 1, RequestConstant.pageSize);
-        return subjectService.listInvigilations(depid, status, pageable).map(ResultVO::success);
+        return subjectService.listInvigilations(depid, status, pageable)
+                .map(ResultVO::success);
     }
 
     // 获取指定状态监考数量
     @GetMapping("/invis/status/{status}/total")
     public Mono<ResultVO> getInvisStatusTotal(@PathVariable int status,
                                               @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.getInvisTotal(depid, status).map(ResultVO::success);
+        return subjectService.getInvisTotal(depid, status)
+                .map(ResultVO::success);
     }
 
     // 更新教师监考状态
@@ -55,14 +57,15 @@ public class SubjectController {
     public Mono<ResultVO> postInviStatus(@RequestBody List<User> users,
                                          @RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.updateUserInviStatus(users, depid)
-                .then(Mono.defer(() -> subjectService.listUsers(depid)
-                        .map(ResultVO::success)));
+                .then(subjectService.listUsers(depid))
+                .map(ResultVO::success);
     }
 
     @GetMapping("invis/{id}")
     public Mono<ResultVO> getInviDetail(@PathVariable String id,
                                         @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.getInvigilation(depid, id).map(ResultVO::success);
+        return subjectService.getInvigilation(depid, id)
+                .map(ResultVO::success);
     }
 
     // 获取开放状态教师，指定周/星期的全部课表
@@ -70,20 +73,23 @@ public class SubjectController {
     public Mono<ResultVO> getTimetables(@PathVariable int week,
                                         @PathVariable int dayweek,
                                         @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listTimetable(depid, week, dayweek).map(ResultVO::success);
+        return subjectService.listTimetable(depid, week, dayweek)
+                .map(ResultVO::success);
     }
 
     // 获取部门教师监考数量
     @GetMapping("invidetails/counts")
     public Mono<ResultVO> getCounts(@RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listDepUserCounts(depid).map(ResultVO::success);
+        return subjectService.listDepUserCounts(depid)
+                .map(ResultVO::success);
     }
 
     // 获取指定日期全部监考
     @GetMapping("invis/dates/{date}")
     public Mono<ResultVO> getDateInvis(@PathVariable LocalDate date,
                                        @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listInvigilations(depid, date).map(ResultVO::success);
+        return subjectService.listInvigilations(depid, date)
+                .map(ResultVO::success);
     }
 
     // 删除原监考详细信息；创建新监考详细信息
@@ -91,9 +97,9 @@ public class SubjectController {
     public Mono<ResultVO> postInviDetails(@PathVariable String inviid,
                                           @RequestAttribute(RequestConstant.DEPID) String depid,
                                           @RequestBody AssignUserDTO assignUser) {
-        return subjectService.updateInviCalanderNull(inviid, depid).flatMap((r) ->
-                subjectService.addInvidetails(inviid, assignUser)
-                        .thenReturn(ResultVO.ok()));
+        return subjectService.updateInviCalanderNull(inviid, depid)
+                .then(subjectService.addInvidetails(inviid, assignUser))
+                .thenReturn(ResultVO.ok());
     }
 
     // 获取指定监考教师信息，及钉钉信息
@@ -107,20 +113,18 @@ public class SubjectController {
     @PostMapping("assignnotices")
     public Mono<ResultVO> postAssignNotices(@RequestBody NoticeDTO notice) {
         return dingtalkService.sendNotice(notice.getUserIds(), notice.getNoticeMessage())
-                .flatMap(result ->
-                        dingtalkService.addCalander(notice.getCreateUnionId(),
-                                        notice.getDate(),
-                                        notice.getStime(),
-                                        notice.getEtime(),
-                                        notice.getUnionIds(),
-                                        notice.getNoticeMessage(),
-                                        notice.getRemindMinutes())
-                                .flatMap(eventId -> subjectService.updateInviCalanderId(
-                                                notice.getInviId(),
-                                                eventId, notice.getCreateUnionId(),
-                                                notice.getNoticeUserIds())
-                                        .thenReturn(ResultVO.success(eventId)))
-                );
+                .then(dingtalkService.addCalander(notice.getCreateUnionId(),
+                        notice.getDate(),
+                        notice.getStime(),
+                        notice.getEtime(),
+                        notice.getUnionIds(),
+                        notice.getNoticeMessage(),
+                        notice.getRemindMinutes()))
+                .flatMap(eventId -> subjectService.updateInviCalanderId(
+                        notice.getInviId(),
+                        eventId, notice.getCreateUnionId(),
+                        notice.getNoticeUserIds()))
+                .map(ResultVO::success);
     }
 
     @GetMapping("comments")
@@ -144,8 +148,8 @@ public class SubjectController {
                                           @RequestAttribute(RequestConstant.DEPID) String depid) {
         rule.setDepId(depid);
         return subjectService.addExculdeRule(rule)
-                .flatMap(r -> subjectService.listExcludeRules(depid)
-                        .map(ResultVO::success));
+                .then(subjectService.listExcludeRules(depid))
+                .map(ResultVO::success);
     }
 
     @GetMapping("excluderules")
@@ -158,7 +162,7 @@ public class SubjectController {
     public Mono<ResultVO> delExculdeRules(@PathVariable String exid,
                                           @RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.removeExculdeRule(exid)
-                .flatMap(r -> subjectService.listExcludeRules(depid)
-                        .map(ResultVO::success));
+                .then(subjectService.listExcludeRules(depid))
+                .map(ResultVO::success);
     }
 }

@@ -43,10 +43,10 @@ public class CommonService {
                 .collectList();
     }
 
-    public Mono<Integer> cancelInvigilation(Invigilation invi, String userDingIds, String cancelMessage) {
+    public Mono<Void> cancelInvigilation(Invigilation invi, String userDingIds, String cancelMessage) {
         return dingtalkService.sendNotice(userDingIds, cancelMessage)
-                .flatMap((r) -> dingtalkService.deleteCalender(invi.getCreateUnionId(), invi.getCalendarId())).
-                thenReturn(1);
+                .then(dingtalkService.deleteCalender(invi.getCreateUnionId(), invi.getCalendarId()))
+                .then();
     }
     // 获取监考用户
     public Mono<List<User>> listUserDingIdsByInviid(String inviid) {

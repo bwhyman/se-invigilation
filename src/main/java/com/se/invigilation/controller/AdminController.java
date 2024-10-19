@@ -28,8 +28,8 @@ public class AdminController {
     @PostMapping("colleges")
     public Mono<ResultVO> postColleges(@RequestBody Department department) {
         return adminService.addCollege(department)
-                .flatMap(r -> adminService.listColleges()
-                        .map(ResultVO::success));
+                .then(adminService.listColleges())
+                .map(ResultVO::success);
     }
 
     //
@@ -40,8 +40,9 @@ public class AdminController {
     }
 
     @PostMapping("users")
-    public Mono<ResultVO> postDepartments(@RequestBody UserDTO userDTO) {
-        return adminService.addUsers(userDTO.getCollId(), userDTO.getCollegeName(), userDTO.getUsers()).map(us -> ResultVO.ok());
+    public Mono<ResultVO> postUsers(@RequestBody UserDTO userDTO) {
+        return adminService.addUsers(userDTO.getCollId(), userDTO.getCollegeName(), userDTO.getUsers())
+                .thenReturn(ResultVO.ok());
     }
 
     //
@@ -49,11 +50,12 @@ public class AdminController {
     public Mono<ResultVO> postSettings(@RequestBody Setting setting) {
         return adminService.addSetting(setting).map(ResultVO::success);
     }
+
     //
     @PatchMapping("settings")
     public Mono<ResultVO> patchSettings(@RequestBody Setting setting) {
         return adminService.updateSetting(setting)
-                .flatMap(r -> commonService.listSettings())
+                .then(commonService.listSettings())
                 .map(ResultVO::success);
     }
 
@@ -63,6 +65,7 @@ public class AdminController {
         return dingtalkService.listDingUsers(dingdepid)
                 .map(ResultVO::success);
     }
+
     //
     @GetMapping("colleges/{collid}/users")
     public Mono<ResultVO> getCollegeUsers(@PathVariable String collid) {

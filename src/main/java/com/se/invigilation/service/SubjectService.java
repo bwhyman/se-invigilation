@@ -18,7 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -93,15 +93,15 @@ public class SubjectService {
         // 删除原监考分配
         Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
         // 创建新详细分配
-        List<Mono<InviDetail>> monos = new ArrayList<>();
-        for (String uid : assignUser.getUserIds()) {
-            InviDetail d = InviDetail.builder()
-                    .inviId(inviid)
-                    .userId(uid)
-                    .build();
-            Mono<InviDetail> save = inviDetailRepository.save(d);
-            monos.add(save);
-        }
+        Mono<Void> DetailM = Flux.fromIterable(Arrays.asList(assignUser.getUserIds()))
+                .flatMap(uid -> {
+                    InviDetail d = InviDetail.builder()
+                            .inviId(inviid)
+                            .userId(uid)
+                            .build();
+                    return inviDetailRepository.save(d);
+                }).then();
+
         // 更新监考信息
         Mono<Invigilation> updateInviM = invigilationRepository.findById(inviid)
                 .flatMap(invi -> {
@@ -114,8 +114,9 @@ public class SubjectService {
                     return invigilationRepository.save(invi);
                 });
 
-        return delInviDetailM.flatMap(r -> Flux.merge(monos).collectList())
-                .flatMap(r -> updateInviM);
+        return delInviDetailM
+                .then(DetailM).
+                then(updateInviM);
     }
 
     public Mono<List<User>> listInviDetailUsers(String inviid) {
@@ -154,6 +155,7 @@ public class SubjectService {
     public Mono<Integer> removeExculdeRule(String rid) {
         return excludeRuleRepository.deleteById(rid).thenReturn(1);
     }
+
     public Mono<List<Invigilation>> listInvisByDateByDepId(String depid, String sdate, String edate) {
         return invigilationRepository.findByDateByDepId(depid, sdate, edate)
                 .collectList();
