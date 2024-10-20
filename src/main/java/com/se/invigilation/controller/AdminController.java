@@ -48,7 +48,9 @@ public class AdminController {
     //
     @PostMapping("settings")
     public Mono<ResultVO> postSettings(@RequestBody Setting setting) {
-        return adminService.addSetting(setting).map(ResultVO::success);
+        return adminService.addSetting(setting)
+                .then(commonService.listSettings())
+                .map(ResultVO::success);
     }
 
     //

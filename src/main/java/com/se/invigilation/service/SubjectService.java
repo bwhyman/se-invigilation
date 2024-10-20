@@ -89,7 +89,7 @@ public class SubjectService {
     }
 
     @Transactional
-    public Mono<Invigilation> addInvidetails(String inviid, AssignUserDTO assignUser) {
+    public Mono<Void> addInvidetails(String inviid, AssignUserDTO assignUser) {
         // 删除原监考分配
         Mono<Integer> delInviDetailM = inviDetailRepository.deleteByInviId(inviid);
         // 创建新详细分配
@@ -116,7 +116,7 @@ public class SubjectService {
 
         return delInviDetailM
                 .then(DetailM).
-                then(updateInviM);
+                then(updateInviM).then();
     }
 
     public Mono<List<User>> listInviDetailUsers(String inviid) {
@@ -135,8 +135,8 @@ public class SubjectService {
     }
 
     @Transactional
-    public Mono<Integer> updateComment(String depid, String comment) {
-        return departmentRepository.updateComment(depid, comment);
+    public Mono<Void> updateComment(String depid, String comment) {
+        return departmentRepository.updateComment(depid, comment).then();
     }
 
     public Mono<String> getDepartmentComment(String depid) {
@@ -147,13 +147,13 @@ public class SubjectService {
         return excludeRuleRepository.findByDepIdOrderByUserId(depid).collectList();
     }
 
-    public Mono<Integer> addExculdeRule(ExcludeRule rule) {
-        return excludeRuleRepository.save(rule).thenReturn(1);
+    public Mono<Void> addExculdeRule(ExcludeRule rule) {
+        return excludeRuleRepository.save(rule).then();
     }
 
     @Transactional
-    public Mono<Integer> removeExculdeRule(String rid) {
-        return excludeRuleRepository.deleteById(rid).thenReturn(1);
+    public Mono<Void> removeExculdeRule(String rid) {
+        return excludeRuleRepository.deleteById(rid).then();
     }
 
     public Mono<List<Invigilation>> listInvisByDateByDepId(String depid, String sdate, String edate) {

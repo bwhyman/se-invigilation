@@ -82,8 +82,8 @@ public class CollegeController {
     public Mono<ResultVO> patchInvigilations(@RequestBody List<Invigilation> invigilations,
                                              @RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.updateDispatcher(invigilations, collid)
-                .then(collegeService.listImporteds(collid)
-                        .map(ResultVO::success));
+                .then(collegeService.listImporteds(collid))
+                .map(ResultVO::success);
     }
 
     // 获取全学院教师
@@ -155,8 +155,8 @@ public class CollegeController {
     public Mono<ResultVO> patchDepartmentsInviStatus(@RequestAttribute(RequestConstant.COLLID) String collid,
                                                      @RequestBody List<Department> departments) {
         return collegeService.updateDepartmentInviStatus(departments)
-                .then(collegeService.listDepartments(collid)
-                        .map(ResultVO::success));
+                .then(collegeService.listDepartments(collid))
+                .map(ResultVO::success);
     }
 
     // 获取全部部门
@@ -209,8 +209,8 @@ public class CollegeController {
     @PostMapping("invinotices")
     public Mono<ResultVO> postDingIds(@RequestBody NoticeRemarkDTO notice) {
         return collegeService.updateInviRemark(notice.getInviIds(), notice.getRemark())
-                .then(dingtalkService.sendNotice(notice.getDingUserIds(), notice.getRemark())
-                        .map(ResultVO::success));
+                .then(dingtalkService.sendNotice(notice.getDingUserIds(), notice.getRemark()))
+                .map(ResultVO::success);
     }
 
     @GetMapping("invis/{id}")
@@ -227,8 +227,8 @@ public class CollegeController {
                                            @RequestAttribute(RequestConstant.COLLID) String collid) {
         invi.setCollId(collid);
         return collegeService.updateInvigilations(oldInviid, invi)
-                .then(collegeService.listImporteds(collid)
-                        .map(ResultVO::success));
+                .then(collegeService.listImporteds(collid))
+                .map(ResultVO::success);
     }
 
     // 获取专业全部教师。用于学院直接分配的检索
@@ -263,14 +263,15 @@ public class CollegeController {
     @DeleteMapping("departments/{depid}")
     public Mono<ResultVO> deleteDepartment(@PathVariable String depid,
                                            @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return subjectService.listUsers(depid).flatMap(users -> {
-            if (!users.isEmpty()) {
-                return Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门"));
-            }
-            return collegeService.removeDepartment(depid, collid)
-                    .then(collegeService.listDepartments(collid))
-                    .map(ResultVO::success);
-        });
+        return subjectService.listUsers(depid)
+                .flatMap(users -> {
+                    if (!users.isEmpty()) {
+                        return Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门"));
+                    }
+                    return collegeService.removeDepartment(depid, collid)
+                            .then(collegeService.listDepartments(collid))
+                            .map(ResultVO::success);
+                });
     }
 
     @PatchMapping("departments/{depid}")

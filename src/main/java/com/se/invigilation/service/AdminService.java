@@ -32,13 +32,13 @@ public class AdminService {
     private final DatabaseClient databaseClient;
 
     @Transactional
-    public Mono<Integer> updateSetting(Setting setting) {
-        return settingRepository.update(setting.getId(), setting.getSvalue());
+    public Mono<Void> updateSetting(Setting setting) {
+        return settingRepository.update(setting.getId(), setting.getSvalue()).then();
     }
 
     @Transactional
-    public Mono<Setting> addSetting(Setting setting) {
-        return settingRepository.save(setting);
+    public Mono<Void> addSetting(Setting setting) {
+        return settingRepository.save(setting).then();
     }
 
     @Transactional
@@ -69,34 +69,33 @@ public class AdminService {
                             .switchIfEmpty(departmentRepository.save(department));
                 }).collectList()
                 .flatMap(deps -> {
-                    List<User> users = new ArrayList<>();
-                    for (User userDTO : userDTOS) {
-                        Department department = deps.stream()
-                                .filter(dep -> dep.getName().equals(userDTO.getDepartment()))
-                                .findFirst().orElseThrow();
+                    List<User> users = userDTOS.stream()
+                            .map(userDTO -> {
+                                Department department = deps.stream()
+                                        .filter(dep -> dep.getName().equals(userDTO.getDepartment()))
+                                        .findFirst().orElseThrow();
 
-                        User user = User.builder()
-                                .name(userDTO.getName())
-                                .inviStatus(User.INVI_STATUS_OPEN)
-                                .account(userDTO.getAccount())
-                                .password(passwordEncoder.encode(userDTO.getAccount()))
-                                .mobile(userDTO.getMobile())
-                                .role(userDTO.getRole())
-                                .dingUserId(userDTO.getDingUserId())
-                                .dingUnionId(userDTO.getDingUnionId())
-                                .department("""
-                                        {"collId": "%s", "collegeName":  "%s", "depId": "%s", "departmentName": "%s"}
-                                        """.formatted(collId, collegeName, department.getId(), department.getName()))
-                                .build();
-                        users.add(user);
-                    }
+                                return User.builder()
+                                        .name(userDTO.getName())
+                                        .inviStatus(User.INVI_STATUS_OPEN)
+                                        .account(userDTO.getAccount())
+                                        .password(passwordEncoder.encode(userDTO.getAccount()))
+                                        .mobile(userDTO.getMobile())
+                                        .role(userDTO.getRole())
+                                        .dingUserId(userDTO.getDingUserId())
+                                        .dingUnionId(userDTO.getDingUnionId())
+                                        .department("""
+                                                {"collId": "%s", "collegeName":  "%s", "depId": "%s", "departmentName": "%s"}
+                                                """.formatted(collId, collegeName, department.getId(), department.getName()))
+                                        .build();
+                            }).toList();
                     return userRepository.saveAll(users).collectList();
                 });
 
     }
 
     @Transactional
-    public Mono<Integer> updateCollUsersDing(List<User> users, String collid) {
+    public Mono<Void> updateCollUsersDing(List<User> users, String collid) {
         var sql = """
                 update user u set u.ding_user_id=?, u.ding_union_id=?
                 where u.account=? and u.department ->> '$.collId'=?
@@ -117,7 +116,7 @@ public class AdminService {
                 }
             }
             return Flux.from(statement.execute()).collectList();
-        }).thenReturn(1);
+        }).then();
     }
 
     public Mono<List<User>> listCollegeUsers(String collid) {

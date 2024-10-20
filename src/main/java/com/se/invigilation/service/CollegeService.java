@@ -111,8 +111,8 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> removeInvigilation(String inviid, String collid) {
-        return invigilationRepository.deleteInvi(inviid, collid);
+    public Mono<Void> removeInvigilation(String inviid, String collid) {
+        return invigilationRepository.deleteInvi(inviid, collid).then();
     }
 
     @Transactional
@@ -163,13 +163,13 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> updatePassword(String account, String collid) {
-        return userRepository.updatePassword(account, collid, passwordEncoder.encode(account));
+    public Mono<Void> updatePassword(String account, String collid) {
+        return userRepository.updatePassword(account, collid, passwordEncoder.encode(account)).then();
     }
 
     @Transactional
-    public Mono<Integer> addUser(User user) {
-        return userRepository.save(user).thenReturn(1);
+    public Mono<Void> addUser(User user) {
+        return userRepository.save(user).then();
     }
 
     public Mono<List<Invigilation>> listInvisByDateByCollId(String collid, String sdate, String edate) {
@@ -178,8 +178,8 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> updateInviRemark(List<String> inviIds, String remark) {
-        return invigilationRepository.updateRemarks(inviIds, remark);
+    public Mono<Void> updateInviRemark(List<String> inviIds, String remark) {
+        return invigilationRepository.updateRemarks(inviIds, remark).then();
     }
 
     public Mono<Invigilation> getInvigilation(String collid, String inviid) {
@@ -193,8 +193,8 @@ public class CollegeService {
                 .then();
     }
 
-    public Mono<Integer> removeUser(String uid, String collid) {
-        return userRepository.deleteById(uid, collid).thenReturn(1);
+    public Mono<Void> removeUser(String uid, String collid) {
+        return userRepository.deleteById(uid, collid).then();
     }
 
     @Transactional
@@ -205,16 +205,16 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Integer> removeDepartment(String did, String collid) {
-        return departmentRepository.deleteById(did).thenReturn(1);
+    public Mono<Void> removeDepartment(String did, String collid) {
+        return departmentRepository.deleteById(did).then();
     }
 
     @Transactional
-    public Mono<Integer> updateDetparmentName(String depId, String collId, String name) {
+    public Mono<Void> updateDetparmentName(String depId, String collId, String name) {
         Mono<Integer> dM = departmentRepository.updateName(depId, collId, name);
         Mono<Integer> uM = userRepository.updateUsersDepartment(depId, collId, name);
         Mono<Integer> inviM = invigilationRepository.updateDepartmentName(depId, collId, name);
-        return Mono.when(dM, uM, inviM).thenReturn(1);
+        return Mono.when(dM, uM, inviM).then();
     }
 
     @Transactional
