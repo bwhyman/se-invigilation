@@ -8,6 +8,7 @@ import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.DepartmentDTO;
 import com.se.invigilation.exception.Code;
+import com.se.invigilation.exception.XException;
 import com.se.invigilation.service.CollegeService;
 import com.se.invigilation.service.CommonService;
 import com.se.invigilation.service.SubjectService;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/")
@@ -41,50 +43,43 @@ public class CommonController {
         String account = map.get("account");
         String password = map.get("password");
         String ltoken = map.get("ltoken");
-        return commonService.getUser(account).filter((u) ->
-                encoder.matches(password, u.getPassword())).map((u) -> {
-            try {
-                DepartmentDTO dd = objectMapper.readValue(u.getDepartment(), DepartmentDTO.class);
-                Map<String, Object> tokenM = Map.of(RequestConstant.UID, u.getId(),
-                        RequestConstant.ROLE, u.getRole(),
-                        RequestConstant.COLLID, dd.getCollId(),
-                        RequestConstant.DEPID, dd.getDepId());
-                String token = jwtComponent.encode(tokenM);
-                response.getHeaders().add("token", token);
-                response.getHeaders().add("role", u.getRole());
-                if (ltoken != null) {
-                    response.getHeaders().add("ltoken", lTokenComponent.encode(u.getAccount()));
-                }
-                return ResultVO.success(u);
-            } catch (JsonProcessingException var6) {
-                return ResultVO.error(Code.LOGIN_ERROR);
-            }
-        }).defaultIfEmpty(ResultVO.error(Code.LOGIN_ERROR));
+        return commonService.getUser(account)
+                .filter((u) -> encoder.matches(password, u.getPassword()))
+                .map((u) -> {
+                    setToken(response, u);
+                    if (ltoken != null) {
+                        response.getHeaders().add("ltoken", lTokenComponent.encode(u.getAccount()));
+                    }
+                    return ResultVO.success(u);
+                }).defaultIfEmpty(ResultVO.error(Code.LOGIN_ERROR));
     }
 
     @GetMapping("l-login")
-    public Mono<ResultVO> login(@RequestHeader(name = "ltoken", required = false) String ltoken,
+    public Mono<ResultVO> login(@RequestHeader Optional<String> ltoken,
                                 ServerHttpResponse response) {
-        if (ltoken == null) {
-            return Mono.just(ResultVO.error(Code.LOGIN_TOKEN_ERROR));
-        }
-        return lTokenComponent.decode(ltoken)
-                .flatMap(account -> commonService.getUser(account).map(u -> {
-                    try {
-                        DepartmentDTO dd = objectMapper.readValue(u.getDepartment(), DepartmentDTO.class);
-                        Map<String, Object> tokenM = Map.of(RequestConstant.UID, u.getId(),
-                                RequestConstant.ROLE, u.getRole(),
-                                RequestConstant.COLLID, dd.getCollId(),
-                                RequestConstant.DEPID, dd.getDepId());
-                        String token = jwtComponent.encode(tokenM);
-                        response.getHeaders().add("token", token);
-                        response.getHeaders().add("role", u.getRole());
-                        return ResultVO.success(u);
-                    } catch (JsonProcessingException var6) {
-                        return ResultVO.error(Code.LOGIN_ERROR);
-                    }
-                }));
+        return ltoken.map(s -> lTokenComponent.decode(s)
+                        .flatMap(commonService::getUser)
+                        .map(u -> {
+                            setToken(response, u);
+                            return ResultVO.success(u);
+                        }))
+                .orElseGet(() -> Mono.just(ResultVO.error(Code.LOGIN_TOKEN_ERROR)));
 
+    }
+
+    private void setToken(ServerHttpResponse resp, User user) {
+        try {
+            DepartmentDTO dd = objectMapper.readValue(user.getDepartment(), DepartmentDTO.class);
+            Map<String, Object> tokenM = Map.of(RequestConstant.UID, user.getId(),
+                    RequestConstant.ROLE, user.getRole(),
+                    RequestConstant.COLLID, dd.getCollId(),
+                    RequestConstant.DEPID, dd.getDepId());
+            String token = jwtComponent.encode(tokenM);
+            resp.getHeaders().add("token", token);
+            resp.getHeaders().add("role", user.getRole());
+        } catch (JsonProcessingException var6) {
+            throw XException.builder().code(Code.LOGIN_ERROR).build();
+        }
     }
 
     @GetMapping("settings")
@@ -155,11 +150,11 @@ public class CommonController {
             @RequestAttribute(RequestConstant.DEPID) String depid,
             @RequestAttribute(RequestConstant.COLLID) String collid) {
         Mono<List<Invigilation>> invigilationsMono;
-        if(User.COLLEGE_ADMIN.equals(role)) {
+        if (User.COLLEGE_ADMIN.equals(role)) {
             invigilationsMono = collegeService.listInvisByDateByCollId(collid, sdate, edate);
-        } else if(User.SUBJECT_ADMIN.equals(role)) {
+        } else if (User.SUBJECT_ADMIN.equals(role)) {
             invigilationsMono = subjectService.listInvisByDateByDepId(depid, sdate, edate);
-        }else {
+        } else {
             invigilationsMono = Mono.empty();
         }
         return invigilationsMono.map(ResultVO::success);

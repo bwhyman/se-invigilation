@@ -7,8 +7,6 @@ import com.se.invigilation.repository.*;
 import io.r2dbc.spi.Statement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
@@ -34,9 +32,8 @@ public class SubjectService {
     private final DatabaseClient databaseClient;
 
     //
-    @Cacheable(value = "users", key = "{#depid}")
     public Mono<List<User>> listUsers(String depid) {
-        return userRepository.findByDepId(depid).collectList().cache();
+        return userRepository.findByDepId(depid).collectList();
     }
 
     //
@@ -49,7 +46,6 @@ public class SubjectService {
     }
 
     @Transactional
-    @CacheEvict(value = "users", allEntries = true)
     public Mono<Void> updateUserInviStatus(List<User> users, String depid) {
         var sql = "update user u set u.invi_status=? where u.id=? and u.department ->> '$.depId'=?";
         return databaseClient

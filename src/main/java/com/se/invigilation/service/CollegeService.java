@@ -273,4 +273,8 @@ public class CollegeService {
                     return userRepository.save(u);
                 });
     }
+
+    public Mono<Void> addDepartment(Department department) {
+        return departmentRepository.save(department).then();
+    }
 }

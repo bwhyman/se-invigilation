@@ -264,14 +264,16 @@ public class CollegeController {
     public Mono<ResultVO> deleteDepartment(@PathVariable String depid,
                                            @RequestAttribute(RequestConstant.COLLID) String collid) {
         return subjectService.listUsers(depid)
-                .flatMap(users -> {
+                .mapNotNull(users -> {
                     if (!users.isEmpty()) {
-                        return Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门"));
+                        return ResultVO.error(Code.ERROR, "禁止移除用户非空部门");
                     }
-                    return collegeService.removeDepartment(depid, collid)
-                            .then(collegeService.listDepartments(collid))
-                            .map(ResultVO::success);
-                });
+                    return null;
+                })
+                .switchIfEmpty(collegeService.removeDepartment(depid, collid)
+                        .then(collegeService.listDepartments(collid))
+                        .map(ResultVO::success));
+
     }
 
     @PatchMapping("departments/{depid}")
@@ -280,6 +282,14 @@ public class CollegeController {
                                           @RequestAttribute(RequestConstant.COLLID) String collid) {
 
         return collegeService.updateDetparmentName(depid, collid, depart.getDepartmentName())
+                .then(collegeService.listDepartments(collid))
+                .map(ResultVO::success);
+    }
+
+    @PostMapping("departments")
+    public Mono<ResultVO> postDepartments(@RequestBody Department department,
+                                          @RequestAttribute(RequestConstant.COLLID) String collid) {
+        return collegeService.addDepartment(department)
                 .then(collegeService.listDepartments(collid))
                 .map(ResultVO::success);
     }
