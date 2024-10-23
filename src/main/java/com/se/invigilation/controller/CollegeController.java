@@ -263,19 +263,29 @@ public class CollegeController {
     @DeleteMapping("departments/{depid}")
     public Mono<ResultVO> deleteDepartment(@PathVariable String depid,
                                            @RequestAttribute(RequestConstant.COLLID) String collid) {
-        return subjectService.listUsers(depid)
-                .mapNotNull(users -> {
-                    if (!users.isEmpty()) {
-                        return ResultVO.error(Code.ERROR, "禁止移除用户非空部门");
-                    }
-                    return null;
-                })
-                .switchIfEmpty(collegeService.removeDepartment(depid, collid)
+        // chartgpt 认为 filter+empty 的实现符合流式风格，但可读性差，需要读者逻辑推导
+        // filter 注入元素又不用，意图确实有点不明确
+        /*return subjectService.listUsers(depid)
+                .filter(List::isEmpty)
+                .flatMap(empty -> collegeService.removeDepartment(depid, collid)
                         .then(collegeService.listDepartments(collid))
-                        .map(ResultVO::success));
+                        .map(ResultVO::success))
+                .defaultIfEmpty(ResultVO.error(Code.ERROR, "禁止移除用户非空部门"));*/
+
+        // chartgpt 认为显式判断的实现可读性更好，更清晰直观
+        return subjectService.listUsers(depid)
+                .flatMap(users -> {
+                    if (!users.isEmpty()) {
+                        return Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门"));
+                    }
+                    return collegeService.removeDepartment(depid, collid)
+                            .then(collegeService.listDepartments(collid))
+                            .map(ResultVO::success);
+                });
 
     }
 
+    //.switchIfEmpty(Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门")))
     @PatchMapping("departments/{depid}")
     public Mono<ResultVO> patchDepartment(@PathVariable String depid,
                                           @RequestBody DepartmentDTO depart,
