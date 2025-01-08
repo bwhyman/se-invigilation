@@ -35,12 +35,19 @@ public class SubjectController {
     }
 
     // 获取指定状态，指定页，监考
+    @GetMapping("invis/dispatcheds")
+    public Mono<ResultVO> getDispatchedsInvis(@RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.listDispatchedInvigilations(depid)
+                .map(ResultVO::success);
+    }
+
+    // 获取指定状态，指定页，监考
     @GetMapping("invis/status/{status}/{page}")
     public Mono<ResultVO> getInvis(@PathVariable int status,
                                    @PathVariable int page,
                                    @RequestAttribute(RequestConstant.DEPID) String depid) {
         Pageable pageable = PageRequest.of(page - 1, RequestConstant.pageSize);
-        return subjectService.listInvigilations(depid, status, pageable)
+        return subjectService.listDispatchedInvigilations(depid, status, pageable)
                 .map(ResultVO::success);
     }
 
@@ -88,7 +95,7 @@ public class SubjectController {
     @GetMapping("invis/dates/{date}")
     public Mono<ResultVO> getDateInvis(@PathVariable LocalDate date,
                                        @RequestAttribute(RequestConstant.DEPID) String depid) {
-        return subjectService.listInvigilations(depid, date)
+        return subjectService.listDispatchedInvigilations(depid, date)
                 .map(ResultVO::success);
     }
 
@@ -163,6 +170,12 @@ public class SubjectController {
                                           @RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.removeExculdeRule(exid)
                 .then(subjectService.listExcludeRules(depid))
+                .map(ResultVO::success);
+    }
+
+    @GetMapping("invis/all")
+    public Mono<ResultVO> getInvisALl(@RequestAttribute(RequestConstant.DEPID) String depid) {
+        return subjectService.listInvisByDepId(depid)
                 .map(ResultVO::success);
     }
 }

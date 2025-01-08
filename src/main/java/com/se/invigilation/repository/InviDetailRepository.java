@@ -1,6 +1,7 @@
 package com.se.invigilation.repository;
 
 import com.se.invigilation.dox.InviDetail;
+import com.se.invigilation.dto.DepartmentAvgDTO;
 import com.se.invigilation.dto.InviCountDTO;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
@@ -30,4 +31,13 @@ public interface InviDetailRepository extends ReactiveCrudRepository<InviDetail,
     Flux<InviCountDTO> findCollUserCounts(String collid);
 
     Mono<Integer> deleteByInviId(String inviId);
+
+    @Query("""
+            select u.department ->> '$.depId' as dep_id, count(u.department ->> '$.depId') as department_quantity
+            from user u join invi_detail ivd
+            on u.id=ivd.user_id
+            where u.department ->> '$.collId'=:collid and u.invi_status=1
+            group by u.department ->> '$.depId'
+            """)
+    Flux<DepartmentAvgDTO> findInviQuantityByCollId(String collid);
 }

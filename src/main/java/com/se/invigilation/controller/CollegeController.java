@@ -4,10 +4,7 @@ import com.se.invigilation.dox.Department;
 import com.se.invigilation.dox.Invigilation;
 import com.se.invigilation.dox.Timetable;
 import com.se.invigilation.dox.User;
-import com.se.invigilation.dto.AssignUserDTO;
-import com.se.invigilation.dto.DepartmentDTO;
-import com.se.invigilation.dto.NoticeDTO;
-import com.se.invigilation.dto.NoticeRemarkDTO;
+import com.se.invigilation.dto.*;
 import com.se.invigilation.exception.Code;
 import com.se.invigilation.service.CollegeService;
 import com.se.invigilation.service.DingtalkService;
@@ -20,9 +17,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/college/")
@@ -285,7 +284,6 @@ public class CollegeController {
 
     }
 
-    //.switchIfEmpty(Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门")))
     @PatchMapping("departments/{depid}")
     public Mono<ResultVO> patchDepartment(@PathVariable String depid,
                                           @RequestBody DepartmentDTO depart,
@@ -312,5 +310,13 @@ public class CollegeController {
             @RequestAttribute(RequestConstant.COLLID) String collid) {
         return collegeService.updateUser(uid, user, collid)
                 .thenReturn(ResultVO.ok());
+    }
+
+    @GetMapping("invis/avg")
+    public Mono<ResultVO> getInvisAvgs(@RequestAttribute(RequestConstant.COLLID) String collid) {
+        Mono<List<DepartmentAvgDTO>> listMono = collegeService.listDepartmentInviQuantity(collid);
+        Mono<List<DepartmentAvgDTO>> listMono1 = collegeService.listOpenTeacherQuantity(collid);
+        return Mono.zip(listMono, listMono1)
+                .map(tu -> ResultVO.success(Map.of("departmentquantity", tu.getT1(), "teacherquantity", tu.getT2())));
     }
 }

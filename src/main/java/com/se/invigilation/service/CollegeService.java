@@ -3,6 +3,7 @@ package com.se.invigilation.service;
 import com.se.invigilation.component.SnowflakeGenerator;
 import com.se.invigilation.dox.*;
 import com.se.invigilation.dto.AssignUserDTO;
+import com.se.invigilation.dto.DepartmentAvgDTO;
 import com.se.invigilation.dto.InviCountDTO;
 import com.se.invigilation.repository.*;
 import io.r2dbc.spi.Statement;
@@ -54,7 +55,7 @@ public class CollegeService {
     }
 
     public Mono<List<Invigilation>> listDispatchedInvis(String depid, String collid, Pageable pageable) {
-        return invigilationRepository.findDispatcheds(depid, collid, pageable).collectList();
+        return invigilationRepository.findDispatchedAndAssigns(depid, collid, pageable).collectList();
     }
 
     @Transactional
@@ -74,8 +75,8 @@ public class CollegeService {
     public Mono<Void> addTimetables(List<Timetable> timetables, String collid) {
         var sql = """
                 insert into timetable
-                (id, coll_id, startweek, endweek, dayweek, period, course, user_id, teacher_name)
-                values(?,?,?,?,?,?,?,?,?)
+                (id, coll_id, startweek, endweek, dayweek, period, course, user_id)
+                values(?,?,?,?,?,?,?,?)
                 """;
         return timetableRepository.deleteByCollId(collid)
                 .then(databaseClient.inConnection(conn -> {
@@ -89,8 +90,7 @@ public class CollegeService {
                                 .bind(4, tb.getDayweek())
                                 .bind(5, tb.getPeriod())
                                 .bind(6, tb.getCourse())
-                                .bind(7, tb.getUserId())
-                                .bind(8, tb.getTeacherName());
+                                .bind(7, tb.getUserId());
                         // 最后一次不能调用add()方法
                         if (i < timetables.size() - 1) {
                             statement.add();
@@ -214,7 +214,7 @@ public class CollegeService {
         Mono<Integer> dM = departmentRepository.updateName(depId, collId, name);
         Mono<Integer> uM = userRepository.updateUsersDepartment(depId, collId, name);
         Mono<Integer> inviM = invigilationRepository.updateDepartmentName(depId, collId, name);
-        return Mono.when(dM, uM, inviM).then();
+        return Mono.when(dM, uM, inviM);
     }
 
     @Transactional
@@ -276,5 +276,14 @@ public class CollegeService {
 
     public Mono<Void> addDepartment(Department department) {
         return departmentRepository.save(department).then();
+    }
+
+    public Mono<List<DepartmentAvgDTO>> listDepartmentInviQuantity(String collid) {
+        return inviDetailRepository.findInviQuantityByCollId(collid)
+                .collectList();
+    }
+    public Mono<List<DepartmentAvgDTO>> listOpenTeacherQuantity(String collid) {
+        return userRepository.findTeacherQuantityByCollId(collid)
+                .collectList();
     }
 }

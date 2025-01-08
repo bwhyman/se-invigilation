@@ -38,7 +38,7 @@ services:
       dingtalk_agentid: ${dingtalk_agentid}
       secretkey: ${secretkey}
       TZ: Asia/Shanghai
-    command: java -jar /home/invigilation-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
+    command: java -jar /home/invigilation.jar --spring.profiles.active=prod
 
   nginx:
     image: nginx:1.25

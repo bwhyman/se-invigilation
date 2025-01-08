@@ -37,8 +37,12 @@ public class SubjectService {
     }
 
     //
-    public Mono<List<Invigilation>> listInvigilations(String depid, int status, Pageable pageable) {
+    public Mono<List<Invigilation>> listDispatchedInvigilations(String depid, int status, Pageable pageable) {
         return invigilationRepository.findByDepIdAndStatus(depid, status, pageable).collectList();
+    }
+
+    public Mono<List<Invigilation>> listDispatchedInvigilations(String depid) {
+        return invigilationRepository.findDispatcheds(depid).collectList();
     }
 
     public Mono<Integer> getInvisTotal(String depid, int status) {
@@ -80,7 +84,7 @@ public class SubjectService {
         return inviDetailRepository.findDepUserCounts(depid).collectList();
     }
 
-    public Mono<List<Invigilation>> listInvigilations(String depid, LocalDate date) {
+    public Mono<List<Invigilation>> listDispatchedInvigilations(String depid, LocalDate date) {
         return invigilationRepository.findByDepIdAndDate(depid, date).collectList();
     }
 
@@ -155,5 +159,8 @@ public class SubjectService {
     public Mono<List<Invigilation>> listInvisByDateByDepId(String depid, String sdate, String edate) {
         return invigilationRepository.findByDateByDepId(depid, sdate, edate)
                 .collectList();
+    }
+    public Mono<List<Invigilation>> listInvisByDepId(String depid) {
+        return invigilationRepository.findByDepId(depid).collectList();
     }
 }

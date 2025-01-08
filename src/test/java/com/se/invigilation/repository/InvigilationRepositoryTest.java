@@ -17,7 +17,7 @@ class InvigilationRepositoryTest {
     @Test
     void findDispatcheds() {
         Pageable pageable = PageRequest.of(0, RequestConstant.pageSize);
-        invigilationRepository.findDispatcheds("1154987556667285504", "1154814591036186624", pageable)
+        invigilationRepository.findDispatchedAndAssigns("1154987556667285504", "1154814591036186624", pageable)
                 .collectList()
                 .block()
                 .forEach(System.out::println);

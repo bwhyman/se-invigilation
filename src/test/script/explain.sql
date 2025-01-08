@@ -68,6 +68,44 @@ explain
 select * from timetable t
 where t.dayweek=1;
 
-flush status ;
 
+flush status ;
 show session status like 'handler%';
+
+explain
+select * from department d where d.college ->> '$.collId' = '1154814591036186624';
+
+/* on无法命中索引 */
+explain
+select d.id, count(d.id) as count from department d join user u
+on u.department ->> '$.depId'=d.id
+join invi_detail ivd
+on u.id=ivd.user_id
+where d.college ->> '$.collId'='1154814591036186624' and u.invi_status=1
+group by d.id;
+
+explain
+select u.department ->> '$.depId' as depid, count(u.department ->> '$.depId') as count from user u
+join invi_detail ivd
+on u.id=ivd.user_id
+where u.department ->> '$.collId'='1154814591036186624' and u.invi_status=1
+group by u.department ->> '$.depId';
+
+
+explain
+select u.department ->> '$.depId' as depid, count(u.department ->> '$.depId') as count from user u where u.department ->> '$.collId'='1154814591036186624' and u.invi_status=1
+group by u.department ->> '$.depId';
+
+explain
+with quantity as (
+    select u.department ->> '$.depId' as depid, count(u.department ->> '$.depId') as count from user u
+    join invi_detail ivd
+    on u.id=ivd.user_id
+    where u.department ->> '$.collId'='1154814591036186624' and u.invi_status=1
+    group by u.department ->> '$.depId'
+),
+count as (
+    select u.department ->> '$.depId' as depid, count(u.department ->> '$.depId') as count from user u where u.department ->> '$.collId'='1154814591036186624' and u.invi_status=1
+    group by u.department ->> '$.depId'
+)
+select q.depid, round(q.count/c.count, 1) avg from quantity q left join count c on q.depid=c.depid;

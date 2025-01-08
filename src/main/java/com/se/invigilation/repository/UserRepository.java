@@ -1,6 +1,7 @@
 package com.se.invigilation.repository;
 
 import com.se.invigilation.dox.User;
+import com.se.invigilation.dto.DepartmentAvgDTO;
 import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
@@ -70,4 +71,11 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
             select * from user u where u.id=:id and u.department ->> '$.collId'=:collid;
             """)
     Mono<User> findByCollId(String id, String collid);
+
+    @Query("""
+             select u.department ->> '$.depId' as dep_id, count(u.department ->> '$.depId') as teacher_quantity from user u
+             where u.department ->> '$.collId'=:collid and u.invi_status=1
+             group by u.department ->> '$.depId'
+            """)
+    Flux<DepartmentAvgDTO> findTeacherQuantityByCollId(String collid);
 }

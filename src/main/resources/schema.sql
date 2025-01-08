@@ -27,7 +27,8 @@ create table if not exists `user`
     update_time   datetime         not null default current_timestamp on update current_timestamp,
 
     unique (account),
-    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin))
+    index ((cast(department ->> '$.depId' as char(19)) collate utf8mb4_bin)),
+    index ((cast(department ->> '$.collId' as char(19)) collate utf8mb4_bin))
 );
 
 create table if not exists `department`
@@ -56,7 +57,6 @@ create table if not exists `timetable`
     `period`     varchar(6)       not null,
     course       json             null comment '{courseName, location, clazz}',
     user_id      char(19)         not null,
-    teacher_name varchar(6)       not null,
     insert_time  datetime         not null default current_timestamp,
     update_time  datetime         not null default current_timestamp on update current_timestamp,
 
@@ -101,9 +101,7 @@ create table if not exists `invi_detail`
     index (user_id)
 );
 
-/*
- 排除监考规则
- */
+-- 排除监考规则
 create table if not exists `exclude_rule`
 (
     id           char(19)         not null primary key,
@@ -113,7 +111,7 @@ create table if not exists `exclude_rule`
     startweek    tinyint unsigned not null,
     endweek      tinyint unsigned not null,
     dayweeks     json             not null comment '[1,2,3]',
-    `periods`    json             not null comment '["12", "78"]',
+    periods    json             not null comment '["12", "78"]',
     insert_time  datetime         not null default current_timestamp,
     update_time  datetime         not null default current_timestamp on update current_timestamp,
 

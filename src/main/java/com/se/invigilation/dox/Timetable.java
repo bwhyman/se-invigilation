@@ -26,7 +26,6 @@ public class Timetable {
     private String period;
     private String course;
     private String userId;
-    private String teacherName;
 
     @ReadOnlyProperty
     @JsonIgnore
