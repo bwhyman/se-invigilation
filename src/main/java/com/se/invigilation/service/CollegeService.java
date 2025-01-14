@@ -32,6 +32,8 @@ public class CollegeService {
     private final PasswordEncoder passwordEncoder;
     private final DatabaseClient databaseClient;
     private final SnowflakeGenerator.Snowflake snowflake;
+    private final SettingRepository settingRepository;
+    private final CollegeSettingRepository collegeSettingRepository;
 
     @Transactional
     public Mono<List<Invigilation>> addInvigilations(List<Invigilation> invigilations) {
@@ -205,7 +207,7 @@ public class CollegeService {
     }
 
     @Transactional
-    public Mono<Void> removeDepartment(String did, String collid) {
+    public Mono<Void> removeDepartment(String did) {
         return departmentRepository.deleteById(did).then();
     }
 
@@ -285,5 +287,24 @@ public class CollegeService {
     public Mono<List<DepartmentAvgDTO>> listOpenTeacherQuantity(String collid) {
         return userRepository.findTeacherQuantityByCollId(collid)
                 .collectList();
+    }
+
+    public Mono<List<Setting>> listSettings(String collid) {
+        return settingRepository.findByCollId(collid).collectList();
+    }
+
+    public Mono<Void> updateSettings(String collid, String settingid, String value) {
+        return collegeSettingRepository.findByCollIdAndSettingId(collid, settingid)
+                .flatMap(collegeSetting -> {
+                    collegeSetting.setSvalue(value);
+                    return collegeSettingRepository.save(collegeSetting);
+                }).switchIfEmpty(Mono.defer(() -> {
+                    CollegeSetting cs =CollegeSetting.builder()
+                            .collId(collid)
+                            .settingId(settingid)
+                            .svalue(value)
+                            .build();
+                    return collegeSettingRepository.save(cs);
+                })).then();
     }
 }

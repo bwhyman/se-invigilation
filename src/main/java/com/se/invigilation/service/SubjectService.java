@@ -30,6 +30,7 @@ public class SubjectService {
     private final InviDetailRepository inviDetailRepository;
     private final ExcludeRuleRepository excludeRuleRepository;
     private final DatabaseClient databaseClient;
+    private final SettingRepository settingRepository;
 
     //
     public Mono<List<User>> listUsers(String depid) {
@@ -162,5 +163,9 @@ public class SubjectService {
     }
     public Mono<List<Invigilation>> listInvisByDepId(String depid) {
         return invigilationRepository.findByDepId(depid).collectList();
+    }
+
+    public Mono<List<Setting>> listSettings(int state) {
+        return settingRepository.findByState(state).collectList();
     }
 }

@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -121,6 +120,9 @@ public class AdminService {
 
     public Mono<List<User>> listCollegeUsers(String collid) {
         return userRepository.findByCollId(collid).collectList();
+    }
+    public Mono<List<Setting>> listSettings() {
+        return settingRepository.findAll().collectList();
     }
 }
 

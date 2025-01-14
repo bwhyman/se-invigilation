@@ -1,6 +1,7 @@
 package com.se.invigilation.controller;
 
 import com.se.invigilation.dox.ExcludeRule;
+import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.AssignUserDTO;
 import com.se.invigilation.dto.NoticeDTO;
@@ -176,6 +177,12 @@ public class SubjectController {
     @GetMapping("invis/all")
     public Mono<ResultVO> getInvisALl(@RequestAttribute(RequestConstant.DEPID) String depid) {
         return subjectService.listInvisByDepId(depid)
+                .map(ResultVO::success);
+    }
+
+    @GetMapping("settings")
+    public Mono<ResultVO> getSetting() {
+        return subjectService.listSettings(Setting.COMMON)
                 .map(ResultVO::success);
     }
 }

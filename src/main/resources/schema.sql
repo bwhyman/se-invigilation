@@ -1,13 +1,27 @@
 create table if not exists `setting`
 (
     id          char(19)     not null primary key,
-    name        varchar(10)  not null,
+    name        varchar(20)  not null,
     skey        varchar(10)  not null,
+    svalue      varchar(200) not null,
+    state       tinyint      not null default 1,
+    insert_time datetime     not null default current_timestamp,
+    update_time datetime     not null default current_timestamp on update current_timestamp,
+
+    unique (skey),
+    index (state)
+);
+
+create table if not exists `college_setting`
+(
+    id          char(19)     not null primary key,
+    coll_id     char(19)     not null,
+    setting_id  char(19)     not null,
     svalue      varchar(200) not null,
     insert_time datetime     not null default current_timestamp,
     update_time datetime     not null default current_timestamp on update current_timestamp,
 
-    unique (skey)
+    index (coll_id, setting_id)
 );
 
 create table if not exists `user`
@@ -49,16 +63,16 @@ create table if not exists `department`
 
 create table if not exists `timetable`
 (
-    id           char(19)         not null primary key,
-    coll_id      char(19)         not null,
-    startweek    tinyint unsigned not null,
-    endweek      tinyint unsigned not null,
-    dayweek      tinyint unsigned not null,
-    `period`     varchar(6)       not null,
-    course       json             null comment '{courseName, location, clazz}',
-    user_id      char(19)         not null,
-    insert_time  datetime         not null default current_timestamp,
-    update_time  datetime         not null default current_timestamp on update current_timestamp,
+    id          char(19)         not null primary key,
+    coll_id     char(19)         not null,
+    startweek   tinyint unsigned not null,
+    endweek     tinyint unsigned not null,
+    dayweek     tinyint unsigned not null,
+    `period`    varchar(6)       not null,
+    course      json             null comment '{courseName, location, clazz}',
+    user_id     char(19)         not null,
+    insert_time datetime         not null default current_timestamp,
+    update_time datetime         not null default current_timestamp on update current_timestamp,
 
     index (coll_id),
     index (user_id, dayweek, startweek, endweek)
@@ -111,7 +125,7 @@ create table if not exists `exclude_rule`
     startweek    tinyint unsigned not null,
     endweek      tinyint unsigned not null,
     dayweeks     json             not null comment '[1,2,3]',
-    periods    json             not null comment '["12", "78"]',
+    periods      json             not null comment '["12", "78"]',
     insert_time  datetime         not null default current_timestamp,
     update_time  datetime         not null default current_timestamp on update current_timestamp,
 

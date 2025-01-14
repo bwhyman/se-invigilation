@@ -1,10 +1,8 @@
 package com.se.invigilation.service;
 
 import com.se.invigilation.dox.Invigilation;
-import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.repository.InvigilationRepository;
-import com.se.invigilation.repository.SettingRepository;
 import com.se.invigilation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +17,6 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class CommonService {
-    private final SettingRepository settingRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final DingtalkService dingtalkService;
@@ -27,10 +24,6 @@ public class CommonService {
 
     public Mono<User> getUser(String account) {
         return userRepository.findByAccount(account);
-    }
-
-    public Mono<List<Setting>> listSettings() {
-        return settingRepository.findAll().collectList();
     }
 
     @Transactional

@@ -109,3 +109,11 @@ count as (
     group by u.department ->> '$.depId'
 )
 select q.depid, round(q.count/c.count, 1) avg from quantity q left join count c on q.depid=c.depid;
+
+explain
+select s.skey, coalesce(cs.svalue, s.svalue) AS svalue
+from setting s left join college_setting cs
+on s.id=cs.setting_id and cs.coll_id='1154814591036186624';
+
+explain
+select * from setting s where s.state<=2;

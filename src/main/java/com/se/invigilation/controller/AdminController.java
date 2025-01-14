@@ -5,7 +5,6 @@ import com.se.invigilation.dox.Setting;
 import com.se.invigilation.dox.User;
 import com.se.invigilation.dto.UserDTO;
 import com.se.invigilation.service.AdminService;
-import com.se.invigilation.service.CommonService;
 import com.se.invigilation.service.DingtalkService;
 import com.se.invigilation.vo.ResultVO;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ import java.util.List;
 public class AdminController {
     private final AdminService adminService;
     private final DingtalkService dingtalkService;
-    private final CommonService commonService;
 
     //
     @PostMapping("colleges")
@@ -49,7 +47,7 @@ public class AdminController {
     @PostMapping("settings")
     public Mono<ResultVO> postSettings(@RequestBody Setting setting) {
         return adminService.addSetting(setting)
-                .then(commonService.listSettings())
+                .then(adminService.listSettings())
                 .map(ResultVO::success);
     }
 
@@ -57,7 +55,7 @@ public class AdminController {
     @PatchMapping("settings")
     public Mono<ResultVO> patchSettings(@RequestBody Setting setting) {
         return adminService.updateSetting(setting)
-                .then(commonService.listSettings())
+                .then(adminService.listSettings())
                 .map(ResultVO::success);
     }
 

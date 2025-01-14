@@ -1,9 +1,6 @@
 package com.se.invigilation.controller;
 
-import com.se.invigilation.dox.Department;
-import com.se.invigilation.dox.Invigilation;
-import com.se.invigilation.dox.Timetable;
-import com.se.invigilation.dox.User;
+import com.se.invigilation.dox.*;
 import com.se.invigilation.dto.*;
 import com.se.invigilation.exception.Code;
 import com.se.invigilation.service.CollegeService;
@@ -17,7 +14,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -277,7 +273,7 @@ public class CollegeController {
                     if (!users.isEmpty()) {
                         return Mono.just(ResultVO.error(Code.ERROR, "禁止移除用户非空部门"));
                     }
-                    return collegeService.removeDepartment(depid, collid)
+                    return collegeService.removeDepartment(depid)
                             .then(collegeService.listDepartments(collid))
                             .map(ResultVO::success);
                 });
@@ -319,4 +315,19 @@ public class CollegeController {
         return Mono.zip(listMono, listMono1)
                 .map(tu -> ResultVO.success(Map.of("departmentquantity", tu.getT1(), "teacherquantity", tu.getT2())));
     }
+    //
+    @GetMapping("settings")
+    public Mono<ResultVO> getSetting(@RequestAttribute(RequestConstant.COLLID) String collid) {
+        return collegeService.listSettings(collid)
+                .map(ResultVO::success);
+    }
+    //
+    @PostMapping("settings")
+    public Mono<ResultVO> postSettings(@RequestBody Setting setting,
+                                       @RequestAttribute(RequestConstant.COLLID) String collid) {
+        return collegeService.updateSettings(collid, setting.getId(), setting.getSvalue())
+                .then(collegeService.listSettings(collid))
+                .map(ResultVO::success);
+    }
+
 }

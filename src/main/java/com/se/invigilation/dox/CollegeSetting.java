@@ -15,15 +15,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Data
 @Builder
-public class Setting {
-    public static final int COMMON = 0;
+public class CollegeSetting {
     @Id
     @CreatedBy
     private String id;
-    private String name;
-    private String skey;
+    private String collId;
+    private String settingId;
     private String svalue;
-    private int state;
     @ReadOnlyProperty
     @JsonIgnore
     private LocalDateTime insertTime;

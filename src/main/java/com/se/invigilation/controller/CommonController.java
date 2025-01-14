@@ -82,11 +82,6 @@ public class CommonController {
         }
     }
 
-    @GetMapping("settings")
-    public Mono<ResultVO> getSetting() {
-        return commonService.listSettings().map(ResultVO::success);
-    }
-
     @PostMapping("passwords")
     public Mono<ResultVO> postPassword(@RequestBody User user,
                                        @RequestAttribute(RequestConstant.UID) String uid) {
